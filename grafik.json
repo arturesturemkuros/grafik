@@ -1,0 +1,52 @@
+{
+  "miesiac": "2026-11",
+  "notatka": "Zmiany w grafiku zgłaszaj kierownikowi najpóźniej 3 dni wcześniej.",
+  "zmiany": {
+    "R": {
+      "nazwa": "Rano",
+      "godziny": "6:00–14:00",
+      "kolor": "#f4cf6b",
+      "tekst": "#1d2a2e"
+    },
+    "P": {
+      "nazwa": "Popołudnie",
+      "godziny": "14:00–22:00",
+      "kolor": "#7fcfc3",
+      "tekst": "#10302c"
+    },
+    "N": {
+      "nazwa": "Noc",
+      "godziny": "22:00–6:00",
+      "kolor": "#3b4a8c",
+      "tekst": "#ffffff"
+    },
+    "W": {
+      "nazwa": "Wolne",
+      "kolor": "#e6e9e8",
+      "tekst": "#6b777b"
+    },
+    "U": {
+      "nazwa": "Urlop",
+      "kolor": "#f2b8b5",
+      "tekst": "#5a1d1a"
+    }
+  },
+  "pracownicy": [
+    {
+      "imie": "Anna K.",
+      "dni": "W R R R R R W W R R R R R W W P P P P P W W U U U U U W W R"
+    },
+    {
+      "imie": "Piotr M.",
+      "dni": "W P P P P P W W P P P P P W W N N N N N W W R R R R R W W P"
+    },
+    {
+      "imie": "Marta S.",
+      "dni": "R W W R R R R R W W R R R R R W W W P P P P P W W R R R R R"
+    },
+    {
+      "imie": "Tomek W.",
+      "dni": "N N W W P P P P P W W N N N N N W W W R R R R R W W P P P P"
+    }
+  ]
+}

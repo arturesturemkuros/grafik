@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grafik pracy</title>
+<style>
+  :root {
+    --tlo: #f5f6f4;
+    --karta: #ffffff;
+    --tekst: #1d2a2e;
+    --tekst-2: #5d6b70;
+    --linia: #dde2e0;
+    --weekend: #eef1ef;
+    --dzis: #0f6b63;
+    --dzis-tlo: #dff0ed;
+    --blad: #a4262c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --tlo: #12191b;
+      --karta: #1a2427;
+      --tekst: #e6eceb;
+      --tekst-2: #9aabae;
+      --linia: #2c3a3e;
+      --weekend: #202c2f;
+      --dzis: #5fc7bb;
+      --dzis-tlo: #1d3a38;
+      --blad: #ff8a8f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--tlo);
+    color: var(--tekst);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    padding: 16px;
+  }
+  main { max-width: 1200px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; margin-bottom: 14px; }
+  h1 { font-size: 1.6rem; margin: 0; font-weight: 700; }
+  #notatka { color: var(--tekst-2); margin: 0 0 14px; }
+  .filtr { margin-left: auto; font-size: .9rem; color: var(--tekst-2); }
+  .filtr select {
+    font: inherit; color: var(--tekst); background: var(--karta);
+    border: 1px solid var(--linia); border-radius: 6px; padding: 6px 8px; margin-left: 6px;
+  }
+  .tabela-wrap {
+    background: var(--karta); border: 1px solid var(--linia); border-radius: 8px;
+    overflow-x: auto;
+  }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: max-content; }
+  th, td { border-bottom: 1px solid var(--linia); border-right: 1px solid var(--linia); text-align: center; }
+  th:last-child, td:last-child { border-right: 0; }
+  tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
+  thead th { padding: 6px 0; min-width: 34px; font-weight: 600; font-size: .85rem; }
+  thead th small { display: block; font-weight: 400; color: var(--tekst-2); font-size: .72rem; }
+  thead th.weekend, td.weekend { background: var(--weekend); }
+  thead th.dzis { background: var(--dzis-tlo); color: var(--dzis); box-shadow: inset 0 3px 0 var(--dzis); }
+  thead th.dzis small { color: var(--dzis); }
+  td.dzis { box-shadow: inset 2px 0 0 var(--dzis), inset -2px 0 0 var(--dzis); }
+  .imie {
+    position: sticky; left: 0; z-index: 1; text-align: left; padding: 8px 12px;
+    background: var(--karta); font-weight: 600; white-space: nowrap; min-width: 120px;
+    border-right: 2px solid var(--linia);
+  }
+  thead .imie { z-index: 2; }
+  td { padding: 0; height: 38px; font-weight: 700; font-size: .9rem; }
+  td span { display: flex; align-items: center; justify-content: center; height: 100%; }
+  td.nieznany span { background: var(--blad); color: #fff; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 0; padding: 0; list-style: none; font-size: .9rem; }
+  .legenda li { display: flex; align-items: center; gap: 8px; }
+  .legenda .znak {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 6px; font-weight: 700; font-size: .85rem;
+  }
+  .legenda .opis { color: var(--tekst-2); }
+  #komunikat { margin: 14px 0; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--blad); color: var(--blad); display: none; }
+  #komunikat.widoczny { display: block; }
+  #ostrzezenia { margin: 14px 0 0; padding: 10px 14px 10px 32px; border-radius: 8px; border: 1px solid var(--linia); color: var(--tekst-2); font-size: .9rem; display: none; }
+  #ostrzezenia.widoczny { display: block; }
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    h1 { font-size: 1.3rem; }
+    .filtr { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="tytul">Grafik pracy</h1>
+    <label class="filtr" id="filtr-wrap" hidden>Pokaż:
+      <select id="filtr"></select>
+    </label>
+  </header>
+  <p id="notatka"></p>
+  <div id="komunikat" role="alert"></div>
+  <div class="tabela-wrap"><table id="tabela" aria-label="Grafik pracy"></table></div>
+  <ul class="legenda" id="legenda"></ul>
+  <ul id="ostrzezenia"></ul>
+</main>
+
+<script>
+(function () {
+  var MIESIACE = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+  var DNI = ['nd','pn','wt','śr','cz','pt','sb'];
+
+  var el = function (id) { return document.getElementById(id); };
+  var make = function (tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+  var pokazBlad = function (tekst) {
+    var k = el('komunikat');
+    k.textContent = tekst;
+    k.className = 'widoczny';
+  };
+
+  // Plik grafik.json jest pobierany za każdym razem od nowa (parametr ?t=), żeby po podmianie nie wyświetlał się stary grafik z pamięci przeglądarki.
+  fetch('grafik.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('Nie znaleziono pliku grafik.json (kod ' + r.status + ').');
+      return r.json();
+    })
+    .then(rysuj)
+    .catch(function (e) {
+      var blad = e instanceof SyntaxError
+        ? 'W pliku grafik.json jest błąd składni (np. brakujący przecinek lub cudzysłów).'
+        : (e.message || 'Nie udało się wczytać grafiku.');
+      if (location.protocol === 'file:') {
+        blad += ' Strona otwarta z dysku nie może wczytać grafiku, uruchom ją przez serwer (np. python -m http.server) albo wgraj na hosting.';
+      }
+      pokazBlad(blad);
+    });
+
+  function rysuj(dane) {
+    var ostrzezenia = [];
+    var m = /^(\d{4})-(\d{2})$/.exec(dane.miesiac || '');
+    if (!m) { pokazBlad('Pole "miesiac" w grafik.json musi mieć postać RRRR-MM, np. 2026-11.'); return; }
+    var rok = +m[1], mies = +m[2] - 1;
+    if (mies < 0 || mies > 11) { pokazBlad('Nieprawidłowy numer miesiąca w polu "miesiac".'); return; }
+    var liczbaDni = new Date(rok, mies + 1, 0).getDate();
+
+    el('tytul').textContent = 'Grafik: ' + MIESIACE[mies] + ' ' + rok;
+    document.title = 'Grafik ' + MIESIACE[mies] + ' ' + rok;
+    el('notatka').textContent = dane.notatka || '';
+    if (!dane.notatka) el('notatka').style.display = 'none';
+
+    var zmiany = dane.zmiany || {};
+    var pracownicy = dane.pracownicy || [];
+
+    var dzis = new Date();
+    var dzisDzien = (dzis.getFullYear() === rok && dzis.getMonth() === mies) ? dzis.getDate() : -1;
+
+    // Filtr pracowników
+    var filtr = el('filtr');
+    filtr.appendChild(new Option('wszystkich', ''));
+    pracownicy.forEach(function (p, i) { filtr.appendChild(new Option(p.imie, String(i))); });
+    el('filtr-wrap').hidden = pracownicy.length < 2;
+    filtr.addEventListener('change', function () { zbuduj(filtr.value); });
+
+    function zbuduj(tylko) {
+      var t = el('tabela');
+      t.textContent = '';
+
+      var thead = make('thead');
+      var wiersz = make('tr');
+      wiersz.appendChild(make('th', 'imie', 'Pracownik'));
+      for (var d = 1; d <= liczbaDni; d++) {
+        var dow = new Date(rok, mies, d).getDay();
+        var th = make('th', (dow === 0 || dow === 6 ? 'weekend ' : '') + (d === dzisDzien ? 'dzis' : ''), String(d));
+        th.appendChild(make('small', '', DNI[dow]));
+        wiersz.appendChild(th);
+      }
+      thead.appendChild(wiersz);
+      t.appendChild(thead);
+
+      var tbody = make('tbody');
+      pracownicy.forEach(function (p, i) {
+        if (tylko !== '' && String(i) !== tylko) return;
+        var kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
+        var tr = make('tr');
+        tr.appendChild(make('th', 'imie', p.imie));
+        for (var d = 1; d <= liczbaDni; d++) {
+          var dow = new Date(rok, mies, d).getDay();
+          var kod = kody[d - 1];
+          var def = kod ? zmiany[kod] : null;
+          var cls = (dow === 0 || dow === 6 ? 'weekend ' : '') + (d === dzisDzien ? 'dzis ' : '');
+          var td = make('td', cls);
+          var s = make('span', '', kod || '?');
+          if (def) {
+            s.style.background = def.kolor || 'transparent';
+            s.style.color = def.tekst || '#1d2a2e';
+            td.title = def.nazwa + (def.godziny ? ' (' + def.godziny + ')' : '');
+          } else {
+            td.className += 'nieznany';
+          }
+          td.appendChild(s);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+      t.appendChild(tbody);
+    }
+    zbuduj('');
+
+    // Legenda
+    var leg = el('legenda');
+    Object.keys(zmiany).forEach(function (k) {
+      var z = zmiany[k];
+      var li = make('li');
+      var znak = make('span', 'znak', k);
+      znak.style.background = z.kolor || 'transparent';
+      znak.style.color = z.tekst || '#1d2a2e';
+      li.appendChild(znak);
+      li.appendChild(make('span', '', z.nazwa));
+      if (z.godziny) li.appendChild(make('span', 'opis', z.godziny));
+      leg.appendChild(li);
+    });
+
+    // Kontrola poprawności danych, żeby błąd w pliku był od razu widoczny
+    pracownicy.forEach(function (p) {
+      var kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
+      if (kody.length !== liczbaDni) {
+        ostrzezenia.push(p.imie + ': podano ' + kody.length + ' dni, a w tym miesiącu jest ' + liczbaDni + '.');
+      }
+      var nieznane = kody.filter(function (k) { return !zmiany[k]; });
+      if (nieznane.length) {
+        ostrzezenia.push(p.imie + ': nieznane oznaczenie zmiany (' + nieznane.filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') + ').');
+      }
+    });
+    if (ostrzezenia.length) {
+      var ul = el('ostrzezenia');
+      ostrzezenia.forEach(function (o) { ul.appendChild(make('li', '', o)); });
+      ul.className = 'widoczny';
+    }
+  }
+})();
+</script>
+</body>
+</html>
