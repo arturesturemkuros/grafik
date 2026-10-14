@@ -20,6 +20,12 @@
       "kolor": "#8ecae6",
       "tekst": "#0b2a3a"
     },
+    "GR2": {
+      "nazwa": "Popołudnie do 19",
+      "godziny": "10–19",
+      "kolor": "#8edbe6",
+      "tekst": "#0b3b3a"
+    },
     "PZ": {
       "nazwa": "Późna zmiana",
       "godziny": "14–22",
@@ -68,11 +74,11 @@
     },
     {
       "imie": "Sosna",
-      "dni": "R W DM W GR R PZ W GR W W GR P PZ W W P W GR W R PZ W R W W W R P P W W"
+      "dni": "R W DD W P R PZ W P W W GR P PZ W W P W GR W R PZ W R W W R P P W W"
     },
     {
       "imie": "Gruby",
-      "dni": ""
+      "dni": "GR GR GR W W GR DM W W W W W GR GR2 DM W GR GR W W GR2 DM W GR W W GR W GR2 GR2 GR GR"
     },
     {
       "imie": "Top G",
