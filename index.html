@@ -38,7 +38,7 @@
     line-height: 1.5;
     padding: 16px;
   }
-  main { max-width: 1200px; margin: 0 auto; }
+  main { width: 100%; max-width: 1800px; margin: 0 auto; }
   header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 14px; }
   h1 { font-size: 1.6rem; margin: 0; font-weight: 700; }
   #miesiac { font-size: 1.1rem; color: var(--tekst-2); }
@@ -48,37 +48,73 @@
     font: inherit; color: var(--tekst); background: var(--karta);
     border: 1px solid var(--linia); border-radius: 6px; padding: 6px 8px; margin-left: 6px;
   }
+
+  /* overflow: clip zaokrągla rogi, a nie tworzy suwaka, więc nagłówek może się przyklejać do góry */
   .tabela-wrap {
     background: var(--karta); border: 1px solid var(--linia); border-radius: 8px;
-    overflow-x: auto;
+    overflow: clip;
   }
-  table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: max-content; }
-  th, td { border-bottom: 1px solid var(--linia); border-right: 1px solid var(--linia); text-align: center; }
-  tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
-  thead th { padding: 6px 0; min-width: 34px; font-weight: 600; font-size: .85rem; }
-  thead th small { display: block; font-weight: 400; color: var(--tekst-2); font-size: .72rem; }
-  thead th.weekend, td.weekend { background: var(--weekend); }
-  thead th.dzis { background: var(--dzis-tlo); color: var(--dzis); box-shadow: inset 0 3px 0 var(--dzis); }
-  thead th.dzis small { color: var(--dzis); }
-  td.dzis { box-shadow: inset 2px 0 0 var(--dzis), inset -2px 0 0 var(--dzis); }
-  .imie {
-    position: sticky; left: 0; z-index: 1; text-align: left; padding: 8px 12px;
-    background: var(--karta); font-weight: 600; white-space: nowrap; min-width: 120px;
-    border-right: 2px solid var(--linia);
+  table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; }
+  th, td { border-bottom: 1px solid var(--linia); border-right: 1px solid var(--linia); text-align: center; padding: 0; }
+  tr > :last-child { border-right: 0; }
+  tbody tr:last-child > * { border-bottom: 0; }
+
+  td.komorka { cursor: pointer; font-weight: 700; }
+  td.komorka span {
+    display: flex; align-items: center; justify-content: center; height: 100%;
+    white-space: nowrap; letter-spacing: -.02em;
   }
-  .suma {
-    position: sticky; right: 0; z-index: 1; min-width: 72px; padding: 0 12px;
-    background: var(--karta); font-weight: 700; white-space: nowrap;
-    border-left: 2px solid var(--linia); border-right: 0;
-  }
-  thead .imie, thead .suma { z-index: 2; }
-  td { padding: 0; height: 38px; font-weight: 700; font-size: .9rem; }
-  td.suma { padding: 0 12px; }
-  td.komorka { cursor: pointer; }
-  td.komorka span { display: flex; align-items: center; justify-content: center; height: 100%; }
   td.komorka:focus-visible { outline: 3px solid var(--dzis); outline-offset: -3px; }
   td.wybrana { outline: 3px solid var(--tekst); outline-offset: -3px; }
   td.nieznany span { background: var(--blad); color: #fff; }
+  td.weekend { background: var(--weekend); }
+
+  /* ===== Układ na komputer: doradcy w wierszach, dni w kolumnach ===== */
+  .widok-waski { display: none; }
+  .widok-szeroki thead th { padding: 6px 0; font-weight: 600; font-size: .82rem; }
+  .widok-szeroki thead th small { display: block; font-weight: 400; color: var(--tekst-2); font-size: .7rem; }
+  .widok-szeroki thead th.weekend { background: var(--weekend); }
+  .widok-szeroki thead th.dzis { background: var(--dzis-tlo); color: var(--dzis); box-shadow: inset 0 3px 0 var(--dzis); }
+  .widok-szeroki thead th.dzis small { color: var(--dzis); }
+  .widok-szeroki td.dzis { box-shadow: inset 2px 0 0 var(--dzis), inset -2px 0 0 var(--dzis); }
+  .widok-szeroki th.imie {
+    width: 126px; text-align: left; padding: 0 10px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    border-right: 2px solid var(--linia);
+  }
+  .widok-szeroki thead th.imie { padding: 6px 10px; }
+  .widok-szeroki th.suma { width: 64px; border-left: 2px solid var(--linia); }
+  .widok-szeroki td.suma { font-weight: 700; font-size: .85rem; border-left: 2px solid var(--linia); }
+  .widok-szeroki td.komorka { height: 40px; font-size: .7rem; }
+
+  /* ===== Układ na telefon: dni w wierszach, doradcy w kolumnach ===== */
+  @media (max-width: 1199px) {
+    .widok-szeroki { display: none; }
+    .widok-waski { display: table; }
+  }
+  .widok-waski thead th {
+    position: sticky; top: 0; z-index: 3; background: var(--karta);
+    border-bottom: 2px solid var(--linia); font-weight: 600;
+  }
+  .widok-waski th.dor { height: 92px; vertical-align: bottom; padding: 6px 0; }
+  .pion {
+    display: inline-block; writing-mode: vertical-rl; transform: rotate(180deg);
+    white-space: nowrap; font-size: .78rem; max-height: 80px; overflow: hidden; text-overflow: ellipsis;
+  }
+  .widok-waski th.dzien {
+    width: 46px; font-size: .72rem; font-weight: 600; white-space: nowrap;
+    background: var(--karta); border-right: 2px solid var(--linia);
+  }
+  .widok-waski th.dzien small { color: var(--tekst-2); font-weight: 400; margin-left: 2px; font-size: .66rem; }
+  .widok-waski th.dzien.weekend { background: var(--weekend); }
+  .widok-waski th.dzien.dzis { background: var(--dzis-tlo); color: var(--dzis); }
+  .widok-waski th.dzien.dzis small { color: var(--dzis); }
+  .widok-waski td.komorka { height: 30px; font-size: .66rem; }
+  .widok-waski td.dzis { box-shadow: inset 0 2px 0 var(--dzis), inset 0 -2px 0 var(--dzis); }
+  .widok-waski tr.razem th, .widok-waski tr.razem td {
+    border-top: 2px solid var(--linia); height: 36px; font-weight: 700; font-size: .7rem; background: var(--karta);
+  }
+
   .info {
     position: absolute; z-index: 10; max-width: 240px;
     background: var(--tekst); color: var(--karta);
@@ -91,16 +127,15 @@
   .legenda li { display: flex; align-items: center; gap: 8px; }
   .legenda .znak {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; border-radius: 6px; font-weight: 700; font-size: .85rem;
+    min-width: 28px; height: 28px; padding: 0 7px; border-radius: 6px; font-weight: 700; font-size: .8rem; white-space: nowrap;
   }
-  .legenda .opis { color: var(--tekst-2); }
   #komunikat { margin: 14px 0; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--blad); color: var(--blad); display: none; }
   #komunikat.widoczny { display: block; }
   #ostrzezenia { margin: 14px 0 0; padding: 10px 14px 10px 32px; border-radius: 8px; border: 1px solid var(--linia); color: var(--tekst-2); font-size: .9rem; display: none; }
   #ostrzezenia.widoczny { display: block; }
   @media (max-width: 600px) {
-    body { padding: 10px; }
-    h1 { font-size: 1.3rem; }
+    body { padding: 8px; }
+    h1 { font-size: 1.25rem; }
     .filtr { margin-left: 0; width: 100%; }
   }
 </style>
@@ -116,7 +151,10 @@
   </header>
   <p id="notatka"></p>
   <div id="komunikat" role="alert"></div>
-  <div class="tabela-wrap" id="tabela-wrap"><table id="tabela" aria-label="Grafik pracy"></table></div>
+  <div class="tabela-wrap">
+    <table id="tabela" class="widok-szeroki" aria-label="Grafik pracy"></table>
+    <table id="tabela-wsk" class="widok-waski" aria-label="Grafik pracy (widok na telefon)"></table>
+  </div>
   <ul class="legenda" id="legenda"></ul>
   <ul id="ostrzezenia"></ul>
   <div class="info" id="info" role="status"></div>
@@ -144,16 +182,29 @@
     return h.toLocaleString('pl-PL', { maximumFractionDigits: 2 });
   };
 
+  var RE_GODZINY = /^\s*(\d{1,2})(?::(\d{2}))?\s*[–—-]\s*(\d{1,2})(?::(\d{2}))?\s*$/;
+
   // Liczba godzin danej zmiany: z pola "godzin" (jeśli jest) albo wyliczona z tekstu "godziny", np. "10 - 18" lub "22:00–6:00".
   function godzinyZmiany(z) {
     if (!z) return 0;
     if (typeof z.godzin === 'number') return z.godzin;
-    var m = /(\d{1,2})(?::(\d{2}))?\s*[–—-]\s*(\d{1,2})(?::(\d{2}))?/.exec(z.godziny || '');
+    var m = RE_GODZINY.exec(z.godziny || '');
     if (!m) return 0;
     var a = (+m[1]) * 60 + (+m[2] || 0);
     var b = (+m[3]) * 60 + (+m[4] || 0);
     if (b <= a) b += 24 * 60;
     return (b - a) / 60;
+  }
+
+  // Napis w kafelku: godziny w skróconej postaci ("10:00–22:00" -> "10-22").
+  // Można go nadpisać polem "etykieta" w grafik.json. Bez godzin (np. Wolne) pokazuje się kod zmiany.
+  function etykieta(kod, def) {
+    if (!def) return kod || '?';
+    if (def.etykieta) return def.etykieta;
+    var m = RE_GODZINY.exec(def.godziny || '');
+    if (!m) return kod;
+    var cz = function (h, mm) { return String(+h) + (mm && +mm ? ':' + mm : ''); };
+    return cz(m[1], m[2]) + '-' + cz(m[3], m[4]);
   }
 
   // Plik grafik.json jest pobierany za każdym razem od nowa (parametr ?t=), żeby po podmianie nie wyświetlał się stary grafik z pamięci przeglądarki.
@@ -187,9 +238,14 @@
 
     var zmiany = dane.zmiany || {};
     var doradcy = dane.doradcy || dane.pracownicy || [];
+    var wiersze = doradcy.map(function (p) {
+      return { p: p, kody: String(p.dni || '').trim().split(/\s+/).filter(Boolean) };
+    });
 
     var dzis = new Date();
     var dzisDzien = (dzis.getFullYear() === rok && dzis.getMonth() === mies) ? dzis.getDate() : -1;
+    var dow = function (d) { return new Date(rok, mies, d).getDay(); };
+    var weekend = function (d) { var w = dow(d); return w === 0 || w === 6; };
 
     // Okienko z godzinami po kliknięciu w zmianę
     var info = el('info');
@@ -236,28 +292,37 @@
         pokazInfo(e.target);
       }
     });
-    el('tabela-wrap').addEventListener('scroll', ukryjInfo);
     window.addEventListener('resize', ukryjInfo);
 
-    // Filtr doradców
-    var filtr = el('filtr');
-    filtr.appendChild(new Option('wszystkich', ''));
-    doradcy.forEach(function (p, i) { filtr.appendChild(new Option(p.imie, String(i))); });
-    el('filtr-wrap').hidden = doradcy.length < 2;
-    filtr.addEventListener('change', function () { zbuduj(filtr.value); });
+    // Jeden kafelek (komórka) grafiku, wspólny dla obu układów
+    function komorka(imie, d, kod) {
+      var def = kod ? zmiany[kod] : null;
+      var cls = 'komorka' + (weekend(d) ? ' weekend' : '') + (d === dzisDzien ? ' dzis' : '') + (def ? '' : ' nieznany');
+      var td = make('td', cls);
+      td.setAttribute('data-imie', imie);
+      td.setAttribute('data-dzien', String(d));
+      td.setAttribute('data-kod', kod || '?');
+      td.setAttribute('tabindex', '0');
+      td.setAttribute('role', 'button');
+      var s = make('span', '', etykieta(kod, def));
+      if (def) {
+        s.style.background = def.kolor || 'transparent';
+        s.style.color = def.tekst || '#1d2a2e';
+      }
+      td.appendChild(s);
+      return { td: td, godz: def ? godzinyZmiany(def) : 0 };
+    }
 
-    function zbuduj(tylko) {
-      ukryjInfo();
+    // Układ na komputer: doradcy w wierszach, dni w kolumnach, suma godzin po prawej
+    function budujSzeroka(lista) {
       var t = el('tabela');
       t.textContent = '';
-
       var thead = make('thead');
       var wiersz = make('tr');
       wiersz.appendChild(make('th', 'imie', 'Doradca'));
       for (var d = 1; d <= liczbaDni; d++) {
-        var dow = new Date(rok, mies, d).getDay();
-        var th = make('th', (dow === 0 || dow === 6 ? 'weekend ' : '') + (d === dzisDzien ? 'dzis' : ''), String(d));
-        th.appendChild(make('small', '', DNI[dow]));
+        var th = make('th', (weekend(d) ? 'weekend ' : '') + (d === dzisDzien ? 'dzis' : ''), String(d));
+        th.appendChild(make('small', '', DNI[dow(d)]));
         wiersz.appendChild(th);
       }
       var thSuma = make('th', 'suma', 'Godz.');
@@ -267,39 +332,71 @@
       t.appendChild(thead);
 
       var tbody = make('tbody');
-      doradcy.forEach(function (p, i) {
-        if (tylko !== '' && String(i) !== tylko) return;
-        var kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
+      lista.forEach(function (w) {
         var tr = make('tr');
-        tr.appendChild(make('th', 'imie', p.imie));
+        tr.appendChild(make('th', 'imie', w.p.imie));
         var suma = 0;
         for (var d = 1; d <= liczbaDni; d++) {
-          var dow = new Date(rok, mies, d).getDay();
-          var kod = kody[d - 1];
-          var def = kod ? zmiany[kod] : null;
-          var cls = 'komorka ' + (dow === 0 || dow === 6 ? 'weekend ' : '') + (d === dzisDzien ? 'dzis ' : '');
-          var td = make('td', cls);
-          td.setAttribute('data-imie', p.imie);
-          td.setAttribute('data-dzien', String(d));
-          td.setAttribute('data-kod', kod || '?');
-          td.setAttribute('tabindex', '0');
-          td.setAttribute('role', 'button');
-          var s = make('span', '', kod || '?');
-          if (def) {
-            s.style.background = def.kolor || 'transparent';
-            s.style.color = def.tekst || '#1d2a2e';
-            suma += godzinyZmiany(def);
-          } else {
-            td.className += 'nieznany';
-          }
-          td.appendChild(s);
-          tr.appendChild(td);
+          var k = komorka(w.p.imie, d, w.kody[d - 1]);
+          suma += k.godz;
+          tr.appendChild(k.td);
         }
         tr.appendChild(make('td', 'suma', formatGodzin(suma)));
         tbody.appendChild(tr);
       });
       t.appendChild(tbody);
     }
+
+    // Układ na telefon: dni w wierszach, doradcy w kolumnach (więcej kafelków mieści się bez przewijania w bok)
+    function budujWaska(lista) {
+      var t = el('tabela-wsk');
+      t.textContent = '';
+      var thead = make('thead');
+      var wiersz = make('tr');
+      wiersz.appendChild(make('th', 'dzien', 'Dzień'));
+      lista.forEach(function (w) {
+        var th = make('th', 'dor');
+        th.title = w.p.imie;
+        th.appendChild(make('span', 'pion', w.p.imie));
+        wiersz.appendChild(th);
+      });
+      thead.appendChild(wiersz);
+      t.appendChild(thead);
+
+      var sumy = lista.map(function () { return 0; });
+      var tbody = make('tbody');
+      for (var d = 1; d <= liczbaDni; d++) {
+        var tr = make('tr');
+        var thD = make('th', 'dzien' + (weekend(d) ? ' weekend' : '') + (d === dzisDzien ? ' dzis' : ''), String(d));
+        thD.appendChild(make('small', '', DNI[dow(d)]));
+        tr.appendChild(thD);
+        lista.forEach(function (w, j) {
+          var k = komorka(w.p.imie, d, w.kody[d - 1]);
+          sumy[j] += k.godz;
+          tr.appendChild(k.td);
+        });
+        tbody.appendChild(tr);
+      }
+      var razem = make('tr', 'razem');
+      razem.appendChild(make('th', 'dzien', 'Godz.'));
+      sumy.forEach(function (s) { razem.appendChild(make('td', 'suma', formatGodzin(s))); });
+      tbody.appendChild(razem);
+      t.appendChild(tbody);
+    }
+
+    function zbuduj(tylko) {
+      ukryjInfo();
+      var lista = wiersze.filter(function (w, i) { return tylko === '' || String(i) === tylko; });
+      budujSzeroka(lista);
+      budujWaska(lista);
+    }
+
+    // Filtr doradców
+    var filtr = el('filtr');
+    filtr.appendChild(new Option('wszystkich', ''));
+    doradcy.forEach(function (p, i) { filtr.appendChild(new Option(p.imie, String(i))); });
+    el('filtr-wrap').hidden = doradcy.length < 2;
+    filtr.addEventListener('change', function () { zbuduj(filtr.value); });
     zbuduj('');
 
     // Legenda
@@ -307,24 +404,22 @@
     Object.keys(zmiany).forEach(function (k) {
       var z = zmiany[k];
       var li = make('li');
-      var znak = make('span', 'znak', k);
+      var znak = make('span', 'znak', etykieta(k, z));
       znak.style.background = z.kolor || 'transparent';
       znak.style.color = z.tekst || '#1d2a2e';
       li.appendChild(znak);
       li.appendChild(make('span', '', z.nazwa));
-      if (z.godziny) li.appendChild(make('span', 'opis', z.godziny));
       leg.appendChild(li);
     });
 
     // Kontrola poprawności danych, żeby błąd w pliku był od razu widoczny
-    doradcy.forEach(function (p) {
-      var kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
-      if (kody.length !== liczbaDni) {
-        ostrzezenia.push(p.imie + ': podano ' + kody.length + ' dni, a w tym miesiącu jest ' + liczbaDni + '.');
+    wiersze.forEach(function (w) {
+      if (w.kody.length !== liczbaDni) {
+        ostrzezenia.push(w.p.imie + ': podano ' + w.kody.length + ' dni, a w tym miesiącu jest ' + liczbaDni + '.');
       }
-      var nieznane = kody.filter(function (k) { return !zmiany[k]; });
+      var nieznane = w.kody.filter(function (k) { return !zmiany[k]; });
       if (nieznane.length) {
-        ostrzezenia.push(p.imie + ': nieznane oznaczenie zmiany (' + nieznane.filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') + ').');
+        ostrzezenia.push(w.p.imie + ': nieznane oznaczenie zmiany (' + nieznane.filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') + ').');
       }
     });
     if (ostrzezenia.length) {
