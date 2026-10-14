@@ -1,1 +1,374 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zamiany – Siejopedia v0.1</title>
+<style>
+  :root {
+    --tlo: #f5f6f4;
+    --karta: #ffffff;
+    --tekst: #1d2a2e;
+    --tekst-2: #5d6b70;
+    --linia: #dde2e0;
+    --dzis: #0f6b63;
+    --dzis-tlo: #dff0ed;
+    --na-akcent: #ffffff;
+    --blad: #a4262c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --tlo: #12191b;
+      --karta: #1a2427;
+      --tekst: #e6eceb;
+      --tekst-2: #9aabae;
+      --linia: #2c3a3e;
+      --dzis: #5fc7bb;
+      --dzis-tlo: #1d3a38;
+      --na-akcent: #06302c;
+      --blad: #ff8a8f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--tlo);
+    color: var(--tekst);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    padding: 16px;
+  }
+  main { width: 100%; max-width: 980px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 22px; }
+  h1 { font-size: 1.6rem; margin: 0; font-weight: 700; }
+  #podtytul { font-size: 1.1rem; color: var(--tekst-2); }
+  header .przycisk { margin-left: auto; align-self: center; }
 
+  .przycisk {
+    display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px;
+    border-radius: 6px; border: 1px solid var(--dzis); background: var(--dzis); color: var(--na-akcent);
+    font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  }
+  .przycisk.drugi { background: transparent; color: var(--dzis); }
+  .przycisk:hover { filter: brightness(1.1); }
+  .przycisk:focus-visible { outline: 3px solid var(--tekst); outline-offset: 2px; }
+
+  #komunikat { margin: 0 0 18px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--blad); color: var(--blad); display: none; }
+  #komunikat.widoczny { display: block; }
+
+  .krok { margin: 0 0 26px; }
+  .krok h2 { font-size: 1.05rem; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; }
+  .nr {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--tekst); color: var(--tlo); font-size: .85rem; font-weight: 700;
+  }
+  .opis { margin: 0 0 10px; color: var(--tekst-2); font-size: .9rem; }
+  .pusto { margin: 0; padding: 12px 14px; border: 1px dashed var(--linia); border-radius: 8px; color: var(--tekst-2); }
+
+  .chipy { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font: inherit; font-weight: 600; min-height: 40px; padding: 6px 16px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--linia); background: var(--karta); color: var(--tekst);
+  }
+  .chip:hover { border-color: var(--dzis); }
+  .chip[aria-pressed="true"] { background: var(--dzis); border-color: var(--dzis); color: var(--na-akcent); }
+  .chip:focus-visible, .kafel:focus-visible { outline: 3px solid var(--tekst); outline-offset: 2px; }
+
+  .kafle { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kafel {
+    display: flex; flex-direction: column; gap: 4px; min-width: 78px; padding: 6px;
+    border: 1px solid var(--linia); border-radius: 8px; background: var(--karta); color: var(--tekst);
+    font: inherit; text-align: center;
+  }
+  button.kafel { cursor: pointer; }
+  button.kafel:hover { border-color: var(--dzis); }
+  button.kafel[aria-pressed="true"] { outline: 3px solid var(--tekst); outline-offset: 1px; }
+  .kafel .data { font-size: .78rem; color: var(--tekst-2); white-space: nowrap; }
+  .kafel .zm { border-radius: 5px; padding: 3px 6px; font-weight: 700; font-size: .85rem; white-space: nowrap; }
+
+  .podsumowanie { margin: 0 0 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .zm-etykieta { border-radius: 5px; padding: 3px 8px; font-weight: 700; font-size: .9rem; white-space: nowrap; }
+  .grupa { margin: 16px 0 8px; font-size: .95rem; font-weight: 600; color: var(--tekst-2); }
+  .osoba { background: var(--karta); border: 1px solid var(--linia); border-radius: 8px; padding: 12px 14px; margin: 0 0 10px; }
+  .osoba-gora { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 0 0 8px; }
+  .osoba-gora strong { font-size: 1.05rem; }
+  .status { padding: 2px 8px; border-radius: 5px; font-size: .8rem; font-weight: 700; }
+  .osoba p { margin: 0 0 8px; color: var(--tekst-2); font-size: .9rem; }
+  .osoba.brak .osoba-gora { margin: 0; }
+  .osoba.brak p { margin: 6px 0 0; }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    h1 { font-size: 1.25rem; }
+    .kafel { min-width: 70px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Siejopedia v0.1</h1>
+    <span id="podtytul">zamiany</span>
+    <a class="przycisk drugi" href="index.html">Wróć do grafiku</a>
+  </header>
+
+  <div id="komunikat" role="alert"></div>
+
+  <section class="krok" id="krok1" hidden>
+    <h2><span class="nr">1</span>Wybierz pracownika</h2>
+    <div class="chipy" id="osoby"></div>
+  </section>
+
+  <section class="krok" id="krok2" hidden>
+    <h2><span class="nr">2</span>Wybierz zmianę, którą chcesz oddać</h2>
+    <p class="opis" id="zakres"></p>
+    <div class="kafle" id="zmiany-osoby"></div>
+  </section>
+
+  <section class="krok" id="krok3" hidden>
+    <h2><span class="nr">3</span>Kto może ją wziąć</h2>
+    <div id="wynik" aria-live="polite"></div>
+  </section>
+</main>
+
+<script>
+(function () {
+  var MIESIACE = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+  var MIESIACE_DOP = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+  var MIESIACE_SKR = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+  var DNI_KR = ['nd','pn','wt','śr','cz','pt','sb'];
+  var DNI_PELNE = ['niedziela','poniedziałek','wtorek','środa','czwartek','piątek','sobota'];
+
+  var el = function (id) { return document.getElementById(id); };
+  var make = function (tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+  var pokazBlad = function (tekst) {
+    var k = el('komunikat');
+    k.textContent = tekst;
+    k.className = 'widoczny';
+  };
+
+  var RE_GODZINY = /^\s*(\d{1,2})(?::(\d{2}))?\s*[–—-]\s*(\d{1,2})(?::(\d{2}))?\s*$/;
+
+  // Napis w kafelku: godziny w skróconej postaci ("10:00–22:00" -> "10-22"), tak samo jak w grafiku.
+  function etykieta(kod, def) {
+    if (!def) return kod || '?';
+    if (def.etykieta) return def.etykieta;
+    var m = RE_GODZINY.exec(def.godziny || '');
+    if (!m) return kod;
+    var cz = function (h, mm) { return String(+h) + (mm && +mm ? ':' + mm : ''); };
+    return cz(m[1], m[2]) + '-' + cz(m[3], m[4]);
+  }
+
+  fetch('grafik.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('Nie znaleziono pliku grafik.json (kod ' + r.status + ').');
+      return r.json();
+    })
+    .then(start)
+    .catch(function (e) {
+      var blad = e instanceof SyntaxError
+        ? 'W pliku grafik.json jest błąd składni (np. brakujący przecinek lub cudzysłów).'
+        : (e.message || 'Nie udało się wczytać grafiku.');
+      if (location.protocol === 'file:') {
+        blad += ' Strona otwarta z dysku nie może wczytać grafiku, uruchom ją przez serwer (np. python -m http.server) albo wgraj na hosting.';
+      }
+      pokazBlad(blad);
+    });
+
+  function start(dane) {
+    var m = /^(\d{4})-(\d{2})$/.exec(dane.miesiac || '');
+    if (!m) { pokazBlad('Pole "miesiac" w grafik.json musi mieć postać RRRR-MM, np. 2026-11.'); return; }
+    var rok = +m[1], mies = +m[2] - 1;
+    if (mies < 0 || mies > 11) { pokazBlad('Nieprawidłowy numer miesiąca w polu "miesiac".'); return; }
+    var liczbaDni = new Date(rok, mies + 1, 0).getDate();
+    el('podtytul').textContent = 'zamiany, ' + MIESIACE[mies] + ' ' + rok;
+
+    var zmiany = dane.zmiany || {};
+    var doradcy = dane.doradcy || dane.pracownicy || [];
+
+    // Kod zmiany -> jej opis (albo null, gdy takiego kodu nie ma w "zmiany").
+    var opis = function (kod) {
+      return kod && Object.prototype.hasOwnProperty.call(zmiany, kod) ? zmiany[kod] : null;
+    };
+    // Dzień pracy to taki, w którym zmiana ma godziny. Wolne i urlop godzin nie mają.
+    var czyPraca = function (def) {
+      return typeof def.godzin === 'number' ? def.godzin > 0 : !!(def.godziny && String(def.godziny).trim());
+    };
+
+    // "dni" to obiekt {"1": "R", "2": "W", ...} albo dawny tekst "R W P ..."
+    var wiersze = doradcy.map(function (p) {
+      var kody = [];
+      if (p.dni && typeof p.dni === 'object' && !Array.isArray(p.dni)) {
+        Object.keys(p.dni).forEach(function (klucz) {
+          var n = parseInt(klucz, 10);
+          if (n >= 1 && n <= liczbaDni && String(n) === klucz.trim()) {
+            kody[n - 1] = String(p.dni[klucz] == null ? '' : p.dni[klucz]).trim();
+          }
+        });
+      } else {
+        kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
+      }
+      return { p: p, kody: kody };
+    });
+    if (!wiersze.length) { pokazBlad('W pliku grafik.json nie ma żadnych doradców.'); return; }
+
+    // Pierwszy dzień, którego można dotyczyć zamiana: dopiero po dzisiejszym dniu.
+    var dzis = new Date();
+    var roznica = (rok * 12 + mies) - (dzis.getFullYear() * 12 + dzis.getMonth());
+    var pierwszy = roznica > 0 ? 1 : roznica === 0 ? dzis.getDate() + 1 : liczbaDni + 1;
+
+    var dow = function (d) { return new Date(rok, mies, d).getDay(); };
+    var krotkaData = function (d) { return DNI_KR[dow(d)] + ' ' + d + ' ' + MIESIACE_SKR[mies]; };
+    var przewin = function (id) {
+      var spokojnie = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el(id).scrollIntoView({ behavior: spokojnie ? 'auto' : 'smooth', block: 'nearest' });
+    };
+
+    // Kafelek z datą i zmianą (z przyciskiem w kroku 2, bez w kroku 3)
+    function kafel(d, kod, def, klik) {
+      var k = make(klik ? 'button' : 'div', 'kafel');
+      if (klik) { k.type = 'button'; k.setAttribute('aria-pressed', 'false'); }
+      k.setAttribute('data-dzien', String(d));
+      k.title = def.nazwa + (def.godziny ? ': ' + def.godziny : '');
+      k.appendChild(make('span', 'data', krotkaData(d)));
+      var zm = make('span', 'zm', etykieta(kod, def));
+      zm.style.background = def.kolor || 'transparent';
+      zm.style.color = def.tekst || '#1d2a2e';
+      k.appendChild(zm);
+      return k;
+    }
+
+    var wybrana = null;   // wybrany pracownik (element z "wiersze")
+
+    // Krok 1: pracownicy
+    var chipy = el('osoby');
+    wiersze.forEach(function (w) {
+      var b = make('button', 'chip', w.p.imie);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () { wybierzOsobe(w); });
+      w.chip = b;
+      chipy.appendChild(b);
+    });
+    el('krok1').hidden = false;
+
+    // Krok 2: zmiany wybranego pracownika po dzisiejszym dniu
+    function wybierzOsobe(w) {
+      wybrana = w;
+      wiersze.forEach(function (x) { x.chip.setAttribute('aria-pressed', x === w ? 'true' : 'false'); });
+      el('krok3').hidden = true;
+
+      var lista = el('zmiany-osoby');
+      lista.textContent = '';
+      var zakres = el('zakres');
+
+      if (pierwszy > liczbaDni) {
+        zakres.textContent = '';
+        lista.appendChild(make('p', 'pusto', 'W tym grafiku nie ma już dni po dzisiejszym, więc nie ma zmian do oddania.'));
+        el('krok2').hidden = false;
+        return;
+      }
+      zakres.textContent = roznica > 0
+        ? 'Zmiany od ' + pierwszy + ' ' + MIESIACE_DOP[mies] + '.'
+        : 'Zmiany od ' + pierwszy + ' ' + MIESIACE_DOP[mies] + ', bo nie można oddać zmiany z dzisiaj ani z dni, które już były.';
+
+      var ile = 0;
+      for (var d = pierwszy; d <= liczbaDni; d++) {
+        var kod = w.kody[d - 1], def = opis(kod);
+        if (!def || !czyPraca(def)) continue;
+        (function (dzien, kodZm, defZm) {
+          var k = kafel(dzien, kodZm, defZm, true);
+          k.addEventListener('click', function () { wybierzDzien(dzien); });
+          lista.appendChild(k);
+        })(d, kod, def);
+        ile++;
+      }
+      if (!ile) lista.appendChild(make('p', 'pusto', w.p.imie + ' nie ma już żadnych zmian po dzisiejszym dniu.'));
+      el('krok2').hidden = false;
+    }
+
+    // Krok 3: kto tego dnia nie pracuje i na jaki dzień można się z nim wymienić
+    function wybierzDzien(dzien) {
+      Array.prototype.forEach.call(el('zmiany-osoby').querySelectorAll('button.kafel'), function (b) {
+        b.setAttribute('aria-pressed', b.getAttribute('data-dzien') === String(dzien) ? 'true' : 'false');
+      });
+      var moja = opis(wybrana.kody[dzien - 1]);
+      var box = el('wynik');
+      box.textContent = '';
+
+      var pods = make('p', 'podsumowanie');
+      pods.appendChild(make('span', '', 'Oddajesz:'));
+      pods.appendChild(make('strong', '', DNI_PELNE[dow(dzien)] + ' ' + dzien + ' ' + MIESIACE_DOP[mies]));
+      var znacznik = make('span', 'zm-etykieta', etykieta(wybrana.kody[dzien - 1], moja));
+      znacznik.style.background = moja.kolor || 'transparent';
+      znacznik.style.color = moja.tekst || '#1d2a2e';
+      pods.appendChild(znacznik);
+      pods.appendChild(make('span', '', moja.nazwa));
+      box.appendChild(pods);
+
+      var chetni = [];
+      wiersze.forEach(function (w) {
+        if (w === wybrana) return;
+        var jegoTegoDnia = opis(w.kody[dzien - 1]);
+        if (!jegoTegoDnia || czyPraca(jegoTegoDnia)) return;   // bierzemy tylko tych, którzy tego dnia nie pracują
+        var dni = [];
+        for (var d = pierwszy; d <= liczbaDni; d++) {
+          var moj = opis(wybrana.kody[d - 1]), jego = opis(w.kody[d - 1]);
+          // dzień na wymianę: on pracuje, a Ty nie
+          if (moj && jego && !czyPraca(moj) && czyPraca(jego)) dni.push(d);
+        }
+        chetni.push({ w: w, status: jegoTegoDnia, dni: dni });
+      });
+
+      if (!chetni.length) {
+        box.appendChild(make('p', 'pusto', 'Tego dnia nikt nie ma wolnego, więc nie ma komu oddać tej zmiany.'));
+      } else {
+        var zDniami = chetni.filter(function (c) { return c.dni.length; });
+        var bez = chetni.filter(function (c) { return !c.dni.length; });
+        if (zDniami.length) {
+          box.appendChild(make('p', 'grupa', 'Nie pracują tego dnia i mogą się wymienić:'));
+          zDniami.forEach(function (c) { box.appendChild(karta(c)); });
+        }
+        if (bez.length) {
+          box.appendChild(make('p', 'grupa', 'Nie pracują tego dnia, ale nie ma dnia na wymianę:'));
+          bez.forEach(function (c) { box.appendChild(karta(c)); });
+        }
+      }
+      el('krok3').hidden = false;
+      przewin('krok3');
+    }
+
+    function karta(c) {
+      var a = make('article', 'osoba' + (c.dni.length ? '' : ' brak'));
+      a.setAttribute('data-imie', c.w.p.imie);
+      var gora = make('div', 'osoba-gora');
+      gora.appendChild(make('strong', '', c.w.p.imie));
+      var st = make('span', 'status', c.status.nazwa);
+      st.style.background = c.status.kolor || 'transparent';
+      st.style.color = c.status.tekst || '#1d2a2e';
+      gora.appendChild(st);
+      a.appendChild(gora);
+      if (c.dni.length) {
+        a.appendChild(make('p', '', 'W zamian możesz wziąć jego zmianę (on pracuje, a Ty masz wolne):'));
+        var kafle = make('div', 'kafle');
+        c.dni.forEach(function (d) {
+          var kod = c.w.kody[d - 1];
+          kafle.appendChild(kafel(d, kod, opis(kod), false));
+        });
+        a.appendChild(kafle);
+      } else {
+        a.appendChild(make('p', '', 'Nie pracuje w żaden z dni, w których Ty masz wolne.'));
+      }
+      return a;
+    }
+  }
+})();
+</script>
+</body>
+</html>
