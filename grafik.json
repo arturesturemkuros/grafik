@@ -1,42 +1,42 @@
 {
-  "miesiac": "2026-11",
+  "miesiac": "2026-10",
   "notatka": "Zmiany w grafiku zgłaszaj kierownikowi najpóźniej 3 dni wcześniej.",
   "zmiany": {
     "R": {
       "nazwa": "Rano",
       "godziny": "10:00–22:00",
-      "kolor": "#f4cf6b",
-      "tekst": "#1d2a2e"
+      "kolor": "#ffd166",
+      "tekst": "#3a2a00"
     },
     "P": {
       "nazwa": "Popołudnie",
       "godziny": "12:00–22:00",
-      "kolor": "#7fcfc3",
-      "tekst": "#10302c"
+      "kolor": "#5ec2b7",
+      "tekst": "#04302a"
     },
     "GR": {
       "nazwa": "Popołudnie do 20",
       "godziny": "12–20",
-      "kolor": "#3b4a8c",
-      "tekst": "#ffffff"
+      "kolor": "#8ecae6",
+      "tekst": "#0b2a3a"
     },
     "PZ": {
-      "nazwa": "Późna zmaiana",
+      "nazwa": "Późna zmiana",
       "godziny": "14–22",
-      "kolor": "#3b4a8c",
+      "kolor": "#6556c9",
       "tekst": "#ffffff"
     },
     "DD": {
       "nazwa": "Dostawa 12",
       "godziny": "7:00-19",
-      "kolor": "#3b4a8c",
-      "tekst": "#ffffff"
+      "kolor": "#f08a4b",
+      "tekst": "#3b1600"
     },
     "DM": {
       "nazwa": "Dostawa 10",
       "godziny": "7:00-19",
-      "kolor": "#3b4a8c",
-      "tekst": "#ffffff"
+      "kolor": "#f7c59f",
+      "tekst": "#3b1600"
     },
     "W": {
       "nazwa": "Wolne",
@@ -45,8 +45,8 @@
     },
     "U": {
       "nazwa": "Urlop",
-      "kolor": "#f2b8b5",
-      "tekst": "#5a1d1a"
+      "kolor": "#b7e4c7",
+      "tekst": "#1b4332"
     }
   },
   "doradcy": [
@@ -56,7 +56,7 @@
     },
     {
       "imie": "Sosna",
-      "dni": "R W DM W GR R PZ W GR W W GR P PZ W W P W GR W R PZ W  R W W W R P P W W "
+      "dni": "R W DM W GR R PZ W GR W W GR P PZ W W P W GR W R PZ W R W W W R P P W W"
     },
     {
       "imie": "Gruby",
@@ -82,7 +82,6 @@
       "imie": "Magazynier",
       "dni": "R W W R R R R R W W R R R R R W W W P P P P P W W R R R R R"
     },
-    
     {
       "imie": "Kieras",
       "dni": "N N W W P P P P P W W N N N N N W W W R R R R R W W P P P P"
