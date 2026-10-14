@@ -15,13 +15,13 @@
       "tekst": "#04302a"
     },
     "GR": {
-      "nazwa": "Popołudnie do 20",
+      "nazwa": "Rano do 20",
       "godziny": "10–20",
       "kolor": "#8ecae6",
       "tekst": "#0b2a3a"
     },
     "GR2": {
-      "nazwa": "Popołudnie do 19",
+      "nazwa": "Rano do 19",
       "godziny": "10–19",
       "kolor": "#8edbe6",
       "tekst": "#0b3b3a"
@@ -62,7 +62,7 @@
       "tekst": "#3a2a90"
     },
     "RŁ2": {
-      "nazwa": "10-21",
+      "nazwa": "11-21",
       "godziny": "11:00–22:00",
       "kolor": "#ffd290",
       "tekst": "#3a1a90"
