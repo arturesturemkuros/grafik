@@ -43,6 +43,18 @@
       "kolor": "#e6e9e8",
       "tekst": "#6b777b"
     },
+    "RŁ": {
+      "nazwa": "10-21",
+      "godziny": "10:00–21:00",
+      "kolor": "#ffd190",
+      "tekst": "#3a2a90"
+    },
+    "RŁ2": {
+      "nazwa": "10-21",
+      "godziny": "10:00–21:00",
+      "kolor": "#ffd290",
+      "tekst": "#3a1a90"
+    },
     "U": {
       "nazwa": "Urlop",
       "kolor": "#b7e4c7",
@@ -76,7 +88,7 @@
     },
     {
       "imie": "ŁZ",
-      "dni": "W P P P P P W W P P P P P W W N N N N N W W R R R R R W W P"
+      "dni": "R W R W W W W RŁ R R R RŁ2 R W R R W R W W R W R W R W R W W W R R "
     },
     {
       "imie": "Magazynier",
