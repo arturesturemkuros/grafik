@@ -14,10 +14,12 @@
     --weekend: #eef1ef;
     --dzis: #0f6b63;
     --dzis-tlo: #dff0ed;
+    --na-akcent: #ffffff;
     --blad: #a4262c;
   }
   @media (prefers-color-scheme: dark) {
     :root {
+      --na-akcent: #06302c;
       --tlo: #12191b;
       --karta: #1a2427;
       --tekst: #e6eceb;
@@ -43,11 +45,19 @@
   h1 { font-size: 1.6rem; margin: 0; font-weight: 700; }
   #miesiac { font-size: 1.1rem; color: var(--tekst-2); }
   #notatka { color: var(--tekst-2); margin: 0 0 14px; }
-  .filtr { margin-left: auto; font-size: .9rem; color: var(--tekst-2); }
+  .narzedzia { margin-left: auto; align-self: center; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+  .filtr { font-size: .9rem; color: var(--tekst-2); }
   .filtr select {
     font: inherit; color: var(--tekst); background: var(--karta);
     border: 1px solid var(--linia); border-radius: 6px; padding: 6px 8px; margin-left: 6px;
   }
+  .przycisk {
+    display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px;
+    border-radius: 6px; border: 1px solid var(--dzis); background: var(--dzis); color: var(--na-akcent);
+    font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  }
+  .przycisk:hover { filter: brightness(1.1); }
+  .przycisk:focus-visible { outline: 3px solid var(--tekst); outline-offset: 2px; }
 
   /* overflow: clip zaokrągla rogi, a nie tworzy suwaka, więc nagłówek może się przyklejać do góry */
   .tabela-wrap {
@@ -149,7 +159,7 @@
   @media (max-width: 600px) {
     body { padding: 8px; }
     h1 { font-size: 1.25rem; }
-    .filtr { margin-left: 0; width: 100%; }
+    .narzedzia { margin-left: 0; width: 100%; }
   }
 </style>
 </head>
@@ -158,9 +168,12 @@
   <header>
     <h1>Siejopedia v0.1</h1>
     <span id="miesiac"></span>
-    <label class="filtr" id="filtr-wrap" hidden>Pokaż:
-      <select id="filtr"></select>
-    </label>
+    <div class="narzedzia">
+      <label class="filtr" id="filtr-wrap" hidden>Pokaż:
+        <select id="filtr"></select>
+      </label>
+      <a class="przycisk" href="zamiany.html">Zamiany</a>
+    </div>
   </header>
   <p id="notatka"></p>
   <div id="komunikat" role="alert"></div>
