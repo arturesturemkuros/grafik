@@ -4,19 +4,37 @@
   "zmiany": {
     "R": {
       "nazwa": "Rano",
-      "godziny": "6:00–14:00",
+      "godziny": "10:00–22:00",
       "kolor": "#f4cf6b",
       "tekst": "#1d2a2e"
     },
     "P": {
       "nazwa": "Popołudnie",
-      "godziny": "14:00–22:00",
+      "godziny": "12:00–22:00",
       "kolor": "#7fcfc3",
       "tekst": "#10302c"
     },
-    "N": {
-      "nazwa": "Noc",
-      "godziny": "22:00–6:00",
+    "GR": {
+      "nazwa": "Popołudnie do 20",
+      "godziny": "12–20",
+      "kolor": "#3b4a8c",
+      "tekst": "#ffffff"
+    },
+    "PZ": {
+      "nazwa": "Późna zmaiana",
+      "godziny": "14–22",
+      "kolor": "#3b4a8c",
+      "tekst": "#ffffff"
+    },
+    "DD": {
+      "nazwa": "Dostawa 12",
+      "godziny": "7:00-19",
+      "kolor": "#3b4a8c",
+      "tekst": "#ffffff"
+    },
+    "DM": {
+      "nazwa": "Dostawa 10",
+      "godziny": "7:00-19",
       "kolor": "#3b4a8c",
       "tekst": "#ffffff"
     },
@@ -34,11 +52,11 @@
   "doradcy": [
     {
       "imie": "Mike",
-      "dni": "W R R R R R W W R R R R R W W P P P P P W W U U U U U W W R"
+      "dni": "R R W W P W W P P P W P W W R P W W P P W W P W W P PZ R W P R"
     },
     {
       "imie": "Sosna",
-      "dni": "W P P P P P W W P P P P P W W N N N N N W W R R R R R W W P"
+      "dni": "R W DM W GR R PZ W GR W W GR P PZ W W P W GR W R PZ W  R W W W R P P W W "
     },
     {
       "imie": "Gruby",
@@ -57,9 +75,14 @@
       "dni": "W P P P P P W W P P P P P W W N N N N N W W R R R R R W W P"
     },
     {
+      "imie": "ŁZ",
+      "dni": "W P P P P P W W P P P P P W W N N N N N W W R R R R R W W P"
+    },
+    {
       "imie": "Magazynier",
       "dni": "R W W R R R R R W W R R R R R W W W P P P P P W W R R R R R"
     },
+    
     {
       "imie": "Kieras",
       "dni": "N N W W P P P P P W W N N N N N W W W R R R R R W W P P P P"
