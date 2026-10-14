@@ -1,1 +1,592 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NorthBet</title>
+<style>
+  :root {
+    --tlo: #eaf2f7;
+    --karta: #ffffff;
+    --tekst: #0b1d2e;
+    --tekst-2: #4a6073;
+    --linia: #cfdce6;
+    --czern: #12171c;
+    --czerwien: #d62839;
+    --akcent: #0b3a5e;
+    --na-akcent: #ffffff;
+    --dobrze: #0d7a4f;
+    --zle: #b3202f;
+    --obrys: #12171c;
+    --nowy: #fff3c4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --tlo: #0a1824;
+      --karta: #112334;
+      --tekst: #e8f1f7;
+      --tekst-2: #9bb0c2;
+      --linia: #25384a;
+      --akcent: #9fd3f5;
+      --na-akcent: #0a1824;
+      --dobrze: #5fd6a0;
+      --zle: #ff8a95;
+      --obrys: #e8f1f7;
+      --nowy: #3a3410;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--tlo);
+    color: var(--tekst);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  main {
+    max-width: 1100px; margin: 0 auto; padding: 16px 16px 0;
+    min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
+  }
+  button { font: inherit; }
+  button:disabled { cursor: not-allowed; opacity: .45; }
 
+  .gora { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-bottom: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+  .zart { margin: 0; color: var(--tekst-2); font-size: .9rem; }
+  .przycisk {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 18px;
+    border-radius: 8px; border: 2px solid var(--akcent); background: var(--akcent); color: var(--na-akcent);
+    font-weight: 700; text-decoration: none; cursor: pointer;
+  }
+  .przycisk.drugi { background: transparent; color: var(--akcent); }
+  .gora .przycisk { margin-left: auto; }
+  .przycisk:hover:not(:disabled) { filter: brightness(1.12); }
+  :is(.przycisk, .male, .duzy, .chip, input):focus-visible { outline: 3px solid var(--tekst); outline-offset: 2px; }
+
+  .gra { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 28px; align-items: start; padding-bottom: 28px; }
+
+  .stan { display: flex; flex-wrap: wrap; gap: 12px 36px; align-items: flex-start; }
+  .pole { display: flex; flex-direction: column; }
+  .etyk { color: var(--tekst-2); font-size: .85rem; }
+  .pole strong { font-size: 2.3rem; line-height: 1.15; font-variant-numeric: tabular-nums; font-weight: 800; }
+  #saldo.plus { color: var(--dobrze); }
+  #saldo.minus { color: var(--zle); }
+  .drobne { color: var(--tekst-2); font-size: .8rem; }
+  .od-nowa {
+    margin-left: auto; align-self: center; min-height: 36px; padding: 0 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--linia); background: var(--karta); color: var(--tekst);
+  }
+  .od-nowa.wazny { background: var(--akcent); border-color: var(--akcent); color: var(--na-akcent); font-weight: 700; }
+
+  .kolo-wrap { position: relative; width: min(60vw, 40vh, 300px); margin: 26px auto 18px; }
+  /* Obracająca się ramka koła wystawałaby poza ekran, więc koło jest przycięte do własnego obrysu */
+  .kolo-clip {
+    width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden;
+    box-shadow: 0 0 0 2px var(--linia), 0 12px 32px rgba(0, 0, 0, .18);
+  }
+  .kolo { width: 100%; height: 100%; border-radius: 50%; border: 8px solid var(--karta); will-change: transform; }
+  .piasta {
+    position: absolute; inset: 35%; border-radius: 50%; background: var(--karta);
+    border: 3px solid var(--tekst); display: grid; place-items: center; color: var(--tekst);
+  }
+  .piasta svg { width: 62%; height: 62%; }
+  .wskaznik {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%); z-index: 2;
+    width: 0; height: 0; border-left: 13px solid transparent; border-right: 13px solid transparent; border-top: 24px solid var(--tekst);
+  }
+
+  .wynik { min-height: 4.4em; margin: 0 0 14px; text-align: center; }
+  .wynik-glowny { display: block; font-size: 1.15rem; font-weight: 800; }
+  .wynik-zart { display: block; color: var(--tekst-2); }
+  .wynik.wygrana .wynik-glowny { color: var(--dobrze); }
+  .wynik.porazka .wynik-glowny { color: var(--zle); }
+
+  .wyplata { max-width: 420px; margin: 0 auto; }
+  .wyplata label { display: block; font-size: .9rem; color: var(--tekst-2); margin-bottom: 4px; }
+  .wyplata-rzad { display: flex; gap: 8px; }
+  .wyplata input {
+    flex: 1; min-width: 0; font: inherit; color: var(--tekst); background: var(--karta);
+    border: 2px solid var(--linia); border-radius: 8px; padding: 0 12px; min-height: 40px;
+  }
+  .wyplata input[aria-invalid="true"] { border-color: var(--zle); }
+  .blad { margin: 6px 0 0; min-height: 1.4em; color: var(--zle); font-size: .9rem; }
+
+  .ranking h2 { font-size: 1.2rem; margin: 0 0 10px; }
+  .ranking table { width: 100%; border-collapse: collapse; background: var(--karta); border: 1px solid var(--linia); border-radius: 8px; overflow: hidden; }
+  .ranking th, .ranking td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--linia); }
+  .ranking tr:last-child td { border-bottom: 0; }
+  .ranking thead th { font-size: .85rem; font-weight: 600; color: var(--tekst-2); background: var(--tlo); }
+  .ranking td.m { width: 64px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ranking td.k, .ranking th.k { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ranking tr.pusty td { color: var(--tekst-2); }
+  .ranking tr.nowy td { background: var(--nowy); font-weight: 700; }
+  .ranking .lokalnie { margin-left: 6px; font-size: .75rem; font-weight: 600; color: var(--tekst-2); }
+  .info-tabeli { margin: 8px 0 0; color: var(--tekst-2); font-size: .85rem; }
+  .lokalne { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--linia); border-radius: 8px; font-size: .9rem; }
+  .lokalne p { margin: 0 0 8px; }
+  .lokalne .rzad { display: flex; flex-wrap: wrap; gap: 8px; }
+  .male { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--akcent); background: transparent; color: var(--akcent); font-weight: 700; cursor: pointer; }
+  .lokalne .potwierdzenie { margin: 8px 0 0; color: var(--dobrze); }
+  .lokalne textarea { display: none; width: 100%; margin-top: 8px; min-height: 120px; font: .8rem ui-monospace, Menlo, Consolas, monospace; color: var(--tekst); background: var(--karta); border: 1px solid var(--linia); border-radius: 6px; }
+  .lokalne textarea.widoczny { display: block; }
+
+  /* ===== Przyciski na dole: dwa duże na środku, po bokach dodaj i odejmij ===== */
+  .bar { position: sticky; bottom: 0; z-index: 5; margin-top: auto; padding: 12px 0 14px; background: var(--tlo); border-top: 1px solid var(--linia); }
+  .bar-wew {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: end;
+    grid-template-areas: "minus srodek plus";
+  }
+  .gr.minus { grid-area: minus; }
+  .gr.plus { grid-area: plus; }
+  .srodek { grid-area: srodek; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gr-podpis { display: block; margin-bottom: 4px; font-size: .8rem; color: var(--tekst-2); text-align: center; }
+  .gr-przyciski { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .male.licz { padding: 0; border-color: var(--linia); background: var(--karta); color: var(--tekst); min-height: 48px; font-size: .95rem; font-variant-numeric: tabular-nums; }
+  .male.licz:hover:not(:disabled) { border-color: var(--akcent); }
+  .duzy {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-width: 150px; min-height: 84px; padding: 8px 16px; border-radius: 14px; cursor: pointer;
+    border: 3px solid var(--obrys); color: #fff; font-size: 1.25rem; font-weight: 800;
+  }
+  .duzy small { font-size: .8rem; font-weight: 600; opacity: .85; font-variant-numeric: tabular-nums; }
+  .duzy.czarne { background: var(--czern); }
+  .duzy.czerwone { background: var(--czerwien); }
+  .duzy:hover:not(:disabled) { transform: translateY(-2px); }
+
+  @media (max-width: 860px) {
+    .gra { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+    .od-nowa { margin-left: 0; }
+  }
+  @media (max-width: 640px) {
+    main { padding: 10px 10px 0; }
+    .logo { font-size: 1.45rem; }
+    .pole strong { font-size: 2rem; }
+    .bar-wew { grid-template-columns: 1fr 1fr; gap: 8px; grid-template-areas: "srodek srodek" "minus plus"; }
+    .duzy { min-width: 0; min-height: 72px; }
+    .gr-podpis { font-size: .7rem; }
+    .gr-przyciski { gap: 3px; }
+    .male.licz { font-size: .8rem; min-height: 44px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .duzy { transition: transform .12s; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="gora">
+    <h1 class="logo">
+      <svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+        <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2.4"/>
+        <path d="M16 5 L20.5 16 H11.5 Z" fill="var(--czerwien)"/>
+        <path d="M16 27 L11.5 16 H20.5 Z" fill="currentColor" opacity=".35"/>
+      </svg>
+      NorthBet
+    </h1>
+    <p class="zart">Żart dla zmęczonej załogi. Pieniądze są na niby, nic nie jest wypłacane.</p>
+    <a class="przycisk drugi" href="index.html">Wróć do grafiku</a>
+  </header>
+
+  <div class="gra">
+    <section class="lewa" aria-label="Gra">
+      <div class="stan">
+        <div class="pole"><span class="etyk">Do wydania</span><strong id="saldo">1000 PLN</strong></div>
+        <div class="pole"><span class="etyk">Stawka</span><strong id="stawka">50 PLN</strong><span class="drobne">od 10 do 10000] PLN</span></div>
+        <button class="od-nowa" id="od-nowa" type="button">Zacznij od nowa</button>
+      </div>
+
+      <div class="kolo-wrap">
+        <div class="wskaznik"></div>
+        <div class="kolo-clip"><div class="kolo" id="kolo"></div></div>
+        <div class="piasta" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M16 3 L22 16 H10 Z" fill="var(--czerwien)"/>
+            <path d="M16 29 L10 16 H22 Z" fill="currentColor" opacity=".35"/>
+          </svg>
+        </div>
+      </div>
+
+      <p class="wynik" id="wynik" aria-live="polite">
+        <span class="wynik-glowny" id="wynik-glowny">Postaw na czarne albo czerwone.</span>
+        <span class="wynik-zart" id="wynik-zart">Szansa to równe 50 na 50.</span>
+      </p>
+
+      <div class="wyplata">
+        <label for="nazwa">Twoja nazwa (potrzebna do wypłaty)</label>
+        <div class="wyplata-rzad">
+          <input id="nazwa" type="text" maxlength="20" autocomplete="off" placeholder="np. Mike">
+          <button class="przycisk" id="wyplac" type="button">Wypłać</button>
+        </div>
+        <p class="blad" id="blad" role="alert"></p>
+      </div>
+    </section>
+
+    <section class="ranking" aria-label="Najlepsze wypłaty">
+      <h2>Top 10 wypłat</h2>
+      <table>
+        <thead><tr><th>Miejsce</th><th>Nazwa</th><th class="k">Wypłata</th></tr></thead>
+        <tbody id="tabela"></tbody>
+      </table>
+      <p class="info-tabeli" id="info-tabeli"></p>
+      <div class="lokalne" id="lokalne" hidden>
+        <p id="lokalne-opis"></p>
+        <div class="rzad">
+          <button class="male" id="kopiuj" type="button">Skopiuj wyniki.json</button>
+          <button class="male" id="pobierz" type="button">Pobierz wyniki.json</button>
+        </div>
+        <p class="potwierdzenie" id="potwierdzenie" role="status"></p>
+        <textarea id="kod" readonly aria-label="Zawartość pliku wyniki.json"></textarea>
+      </div>
+    </section>
+  </div>
+
+  <div class="bar">
+    <div class="bar-wew">
+      <div class="gr minus">
+        <span class="gr-podpis">Odejmij od stawki</span>
+        <div class="gr-przyciski">
+          <button class="male licz" type="button" data-zmiana="-100" aria-label="Odejmij 100">−100</button>
+          <button class="male licz" type="button" data-zmiana="-50" aria-label="Odejmij 50">−50</button>
+          <button class="male licz" type="button" data-zmiana="-20" aria-label="Odejmij 20">−20</button>
+          <button class="male licz" type="button" data-zmiana="-10" aria-label="Odejmij 10">−10</button>
+        </div>
+      </div>
+      <div class="srodek">
+        <button class="duzy czarne" id="czarne" type="button">Na czarne<small class="za"></small></button>
+        <button class="duzy czerwone" id="czerwone" type="button">Na czerwone<small class="za"></small></button>
+      </div>
+      <div class="gr plus">
+        <span class="gr-podpis">Dodaj do stawki</span>
+        <div class="gr-przyciski">
+          <button class="male licz" type="button" data-zmiana="10" aria-label="Dodaj 10">+10</button>
+          <button class="male licz" type="button" data-zmiana="20" aria-label="Dodaj 20">+20</button>
+          <button class="male licz" type="button" data-zmiana="50" aria-label="Dodaj 50">+50</button>
+          <button class="male licz" type="button" data-zmiana="100" aria-label="Dodaj 100">+100</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  var START = 1000, MIN = 10, MAX = 10000, KROK = 10, STAWKA_START = 50;
+  var SEGMENTY = 18, KAT = 360 / SEGMENTY, CZAS_OBROTU = 2400, MAX_WYNIKOW = 100;
+  var K_STAN = 'northbet-stan', K_LOKALNE = 'northbet-lokalne';
+
+  var WYGRANA = [
+    'Trafione! Dziś to Ty ustalasz grafik.',
+    'Kierownik właśnie zerknął na Twój telefon.',
+    'Część wygranej idzie na kawę dla całej zmiany.',
+    'Szkoda, że urlopu nie da się tak kupić.',
+    'Szczęście dopisuje. Może wymień się na lepszą zmianę?',
+    'Wygrana! Wolna sobota nadal nie wchodzi w grę.',
+    'Zielone światło od losu i od Siejopedii.'
+  ];
+  var PORAZKA = [
+    'Pudło. Ta stawka miała być na kawę po zmianie.',
+    'Wymień się na zmianę z kimś, kto ma więcej szczęścia.',
+    'Dostawa przyjedzie tak czy inaczej.',
+    'NorthBet dziękuje i życzy miłej zmiany.',
+    'Pocieszenie: wypłata i tak wpadnie na koniec miesiąca.',
+    'Czarny dzień. Albo czerwony. W każdym razie przegrany.',
+    'Dom wygrywa. A domem jest tu Siejopedia.'
+  ];
+  var SERIA_W = ['Seria wygranych! NorthBet patrzy na Ciebie podejrzliwie.', 'Trzy z rzędu. Albo masz szczęście, albo znasz kierownika.'];
+  var SERIA_P = ['Trzecia porażka z rzędu. Może czas na zamianę zmiany?', 'Seria porażek. Rozważ wypłatę resztek.'];
+  var BANKRUT = 'Pusto na koncie. NorthBet zaprasza z powrotem do pracy.';
+
+  var el = function (id) { return document.getElementById(id); };
+  var make = function (tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+  var pln = function (n) { return n.toLocaleString('pl-PL') + ' PLN'; };
+  var spokojnie = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Zapis w przeglądarce jest tylko dodatkiem: jeśli jest zablokowany, gra nadal działa.
+  function zapisz(klucz, wartosc) { try { localStorage.setItem(klucz, JSON.stringify(wartosc)); } catch (e) {} }
+  function wczytaj(klucz) { try { var t = localStorage.getItem(klucz); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+
+  // Losowanie z generatora kryptograficznego, żeby naprawdę było pół na pół
+  function losujBit() {
+    try { var a = new Uint8Array(1); crypto.getRandomValues(a); return a[0] & 1; }
+    catch (e) { return Math.random() < 0.5 ? 1 : 0; }
+  }
+  function los(n) {
+    try { var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
+    catch (e) { return Math.floor(Math.random() * n); }
+  }
+  var wybierz = function (lista) { return lista[los(lista.length)]; };
+
+  // ---------- stan gry ----------
+  var zapis = wczytaj(K_STAN) || {};
+  var liczbaOk = function (x) { return typeof x === 'number' && isFinite(x) && x >= 0 && x % KROK === 0 && x < 1e9; };
+  var stan = {
+    saldo: liczbaOk(zapis.saldo) ? zapis.saldo : START,
+    stawka: liczbaOk(zapis.stawka) ? zapis.stawka : STAWKA_START,
+    nazwa: typeof zapis.nazwa === 'string' ? zapis.nazwa.slice(0, 20) : '',
+    seria: 0
+  };
+  var zajety = false, obrot = 0, ostatniKlucz = null;
+  var plikWyniki = [], lokalne = [], brakPliku = false;
+
+  function dopasujStawke() {
+    if (stan.saldo < MIN) { stan.stawka = MIN; return; }
+    stan.stawka = Math.max(MIN, Math.min(stan.stawka, MAX, stan.saldo));
+  }
+  function zapiszStan() { zapisz(K_STAN, { saldo: stan.saldo, stawka: stan.stawka, nazwa: stan.nazwa }); }
+
+  // ---------- koło ----------
+  var kolo = el('kolo');
+  (function () {
+    var czesci = [];
+    for (var i = 0; i < SEGMENTY; i++) {
+      var kolor = i % 2 === 0 ? 'var(--czerwien)' : 'var(--czern)';   // parzyste segmenty są czerwone, nieparzyste czarne
+      czesci.push(kolor + ' ' + (i * KAT) + 'deg ' + ((i + 1) * KAT) + 'deg');
+    }
+    kolo.style.background = 'conic-gradient(from 0deg, ' + czesci.join(', ') + ')';
+  })();
+
+  // Kręci kołem tak, żeby pod wskaźnikiem (u góry) zatrzymał się segment wylosowanego koloru.
+  function zakrec(kolor, gotowe) {
+    var reszta = kolor === 'czerwone' ? 0 : 1;
+    var kandydaci = [];
+    for (var i = 0; i < SEGMENTY; i++) if (i % 2 === reszta) kandydaci.push(i);
+    var k = wybierz(kandydaci);
+    var kat = k * KAT + KAT / 2 + (Math.random() * 10 - 5);       // środek segmentu, plus minus 5 stopni
+    var cel = ((-kat) % 360 + 360) % 360;                          // obrót, przy którym pod wskaźnikiem jest ten kąt
+    var biezacy = ((obrot % 360) + 360) % 360;
+    obrot += 360 * (4 + los(3)) + ((cel - biezacy) + 360) % 360;
+    kolo.style.transition = spokojnie ? 'none' : 'transform ' + CZAS_OBROTU + 'ms cubic-bezier(.12,.7,.1,1)';
+    kolo.style.transform = 'rotate(' + obrot + 'deg)';
+    setTimeout(gotowe, spokojnie ? 0 : CZAS_OBROTU + 60);
+  }
+
+  // ---------- wyświetlanie ----------
+  function komunikat(glowny, zart, klasa) {
+    el('wynik').className = 'wynik' + (klasa ? ' ' + klasa : '');
+    el('wynik-glowny').textContent = glowny;
+    el('wynik-zart').textContent = zart || '';
+  }
+  function blysnij(klasa) {
+    var s = el('saldo');
+    s.className = klasa;
+    setTimeout(function () { s.className = ''; }, 700);
+  }
+  function odswiez() {
+    dopasujStawke();
+    var bankrut = stan.saldo < MIN;
+    el('saldo').textContent = pln(stan.saldo);
+    el('stawka').textContent = pln(stan.stawka);
+    el('wyplac').textContent = stan.saldo >= MIN ? 'Wypłać ' + pln(stan.saldo) : 'Wypłać';
+    Array.prototype.forEach.call(document.querySelectorAll('.duzy .za'), function (s) { s.textContent = 'za ' + pln(stan.stawka); });
+    var blok = zajety || bankrut;
+    el('czarne').disabled = blok;
+    el('czerwone').disabled = blok;
+    el('wyplac').disabled = zajety || bankrut;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-zmiana]'), function (b) { b.disabled = blok; });
+    el('od-nowa').disabled = zajety;
+    el('od-nowa').className = 'od-nowa' + (bankrut ? ' wazny' : '');
+  }
+
+  // ---------- ranking ----------
+  function czysc(e) {
+    if (!e || typeof e !== 'object') return null;
+    var nazwa = String(e.nazwa == null ? '' : e.nazwa).trim().slice(0, 20);
+    var kwota = Number(e.kwota);
+    if (!nazwa || !isFinite(kwota) || kwota < 0) return null;
+    return { nazwa: nazwa, kwota: kwota, czas: typeof e.czas === 'string' ? e.czas : '' };
+  }
+  var klucz = function (e) { return e.nazwa + '|' + e.kwota + '|' + e.czas; };
+
+  // Wyniki z pliku plus te zapisane tylko w tej przeglądarce, od najwyższego. Remis: wcześniejszy wynik wyżej.
+  function polacz() {
+    var widziane = {}, lista = [];
+    function dodaj(e, lokalny) {
+      var k = klucz(e);
+      if (widziane[k]) return;
+      widziane[k] = true;
+      lista.push({ nazwa: e.nazwa, kwota: e.kwota, czas: e.czas, lokalny: lokalny });
+    }
+    plikWyniki.forEach(function (e) { dodaj(e, false); });
+    lokalne.forEach(function (e) { dodaj(e, true); });
+    lista.sort(function (a, b) { return b.kwota - a.kwota || (a.czas < b.czas ? -1 : a.czas > b.czas ? 1 : 0); });
+    return lista;
+  }
+
+  function odmiana(n) {
+    if (n === 1) return 'wynik';
+    var d = n % 10, s = n % 100;
+    return d >= 2 && d <= 4 && !(s >= 12 && s <= 14) ? 'wyniki' : 'wyników';
+  }
+
+  function rysujTabele() {
+    var lista = polacz();
+    var tbody = el('tabela');
+    tbody.textContent = '';
+    for (var i = 0; i < 10; i++) {
+      var e = lista[i];
+      var tr = make('tr', e ? (klucz(e) === ostatniKlucz ? 'nowy' : '') : 'pusty');
+      tr.appendChild(make('td', 'm', String(i + 1)));
+      var tdN = make('td', '', e ? e.nazwa : '—');
+      if (e && e.lokalny) tdN.appendChild(make('span', 'lokalnie', '(tylko u Ciebie)'));
+      tr.appendChild(tdN);
+      tr.appendChild(make('td', 'k', e ? pln(e.kwota) : '—'));
+      tbody.appendChild(tr);
+    }
+    el('info-tabeli').textContent = brakPliku ? 'Nie udało się wczytać wyniki.json, więc tabela pokazuje tylko wyniki z tej przeglądarki.' : '';
+    var box = el('lokalne');
+    box.hidden = lokalne.length === 0;
+    if (lokalne.length) {
+      el('lokalne-opis').textContent = 'Masz ' + lokalne.length + ' ' + odmiana(lokalne.length) +
+        ' zapisanych tylko w tej przeglądarce. Żeby zobaczyli je wszyscy, wklej kod do pliku wyniki.json w repozytorium.';
+    }
+  }
+
+  function jsonWynikow() {
+    var wpisy = polacz().slice(0, MAX_WYNIKOW).map(function (e) { return { nazwa: e.nazwa, kwota: e.kwota, czas: e.czas }; });
+    if (!wpisy.length) return '{\n  "wyniki": []\n}\n';
+    return '{\n  "wyniki": [\n' + wpisy.map(function (e) { return '    ' + JSON.stringify(e); }).join(',\n') + '\n  ]\n}\n';
+  }
+
+  function potwierdz(tekst) { el('potwierdzenie').textContent = tekst; }
+  el('kopiuj').addEventListener('click', function () {
+    var tekst = jsonWynikow(), kod = el('kod');
+    var awaryjnie = function () {
+      kod.value = tekst; kod.className = 'widoczny'; kod.focus(); kod.select();
+      potwierdz('Nie udało się skopiować automatycznie. Zaznaczyłem kod, skopiuj go ręcznie.');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(tekst).then(function () {
+        potwierdz('Skopiowano. Wklej w pliku wyniki.json na GitHubie i zatwierdź zmianę.');
+      }, awaryjnie);
+    } else awaryjnie();
+  });
+  el('pobierz').addEventListener('click', function () {
+    var blob = new Blob([jsonWynikow()], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'wyniki.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    potwierdz('Pobrano wyniki.json. Wgraj go do repozytorium w miejsce starego.');
+  });
+
+  // ---------- gra ----------
+  function postaw(wybor) {
+    if (zajety || stan.saldo < MIN) return;
+    dopasujStawke();
+    var stawka = stan.stawka;
+    zajety = true;
+    odswiez();
+    komunikat('Kręcimy…', 'Stawka ' + pln(stawka) + ' na ' + wybor + '.', '');
+    var wypadlo = losujBit() === 1 ? 'czerwone' : 'czarne';
+    zakrec(wypadlo, function () {
+      var wygrana = wypadlo === wybor;
+      stan.saldo += wygrana ? stawka : -stawka;
+      stan.seria = wygrana ? (stan.seria > 0 ? stan.seria + 1 : 1) : (stan.seria < 0 ? stan.seria - 1 : -1);
+      zajety = false;
+      dopasujStawke();
+      zapiszStan();
+      blysnij(wygrana ? 'plus' : 'minus');
+      var zart = wygrana
+        ? (stan.seria >= 3 ? wybierz(SERIA_W) : wybierz(WYGRANA))
+        : (stan.saldo < MIN ? BANKRUT : stan.seria <= -3 ? wybierz(SERIA_P) : wybierz(PORAZKA));
+      komunikat('Wypadło ' + wypadlo + '. ' + (wygrana ? 'Wygrywasz ' : 'Tracisz ') + pln(stawka) + '.', zart, wygrana ? 'wygrana' : 'porazka');
+      odswiez();
+    });
+  }
+  el('czarne').addEventListener('click', function () { postaw('czarne'); });
+  el('czerwone').addEventListener('click', function () { postaw('czerwone'); });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-zmiana]'), function (b) {
+    b.addEventListener('click', function () {
+      if (zajety || stan.saldo < MIN) return;
+      stan.stawka += parseInt(b.getAttribute('data-zmiana'), 10);
+      odswiez();
+      zapiszStan();
+    });
+  });
+
+  function odNowa() {
+    if (zajety) return;
+    stan.saldo = START; stan.stawka = STAWKA_START; stan.seria = 0;
+    zapiszStan();
+    komunikat('Nowa gra: znowu ' + pln(START) + '.', 'Powodzenia. Przyda się.', '');
+    odswiez();
+  }
+  el('od-nowa').addEventListener('click', odNowa);
+
+  var poleNazwy = el('nazwa');
+  poleNazwy.value = stan.nazwa;
+  poleNazwy.addEventListener('input', function () {
+    stan.nazwa = poleNazwy.value.slice(0, 20);
+    poleNazwy.removeAttribute('aria-invalid');
+    el('blad').textContent = '';
+    zapiszStan();
+  });
+
+  el('wyplac').addEventListener('click', function () {
+    if (zajety || stan.saldo < MIN) return;
+    var nazwa = poleNazwy.value.trim().replace(/\s+/g, ' ');
+    if (!nazwa) {
+      poleNazwy.setAttribute('aria-invalid', 'true');
+      el('blad').textContent = 'Wpisz nazwę, zanim klikniesz Wypłać.';
+      poleNazwy.focus();
+      return;
+    }
+    var wpis = czysc({ nazwa: nazwa, kwota: stan.saldo, czas: new Date().toISOString() });
+    lokalne.push(wpis);
+    zapisz(K_LOKALNE, lokalne);
+    ostatniKlucz = klucz(wpis);
+    var lista = polacz();
+    var miejsce = 0;
+    for (var i = 0; i < lista.length; i++) if (klucz(lista[i]) === ostatniKlucz) { miejsce = i + 1; break; }
+
+    stan.nazwa = poleNazwy.value = nazwa;
+    stan.saldo = START; stan.stawka = STAWKA_START; stan.seria = 0;
+    zapiszStan();
+    rysujTabele();
+    odswiez();
+    if (miejsce && miejsce <= 10) {
+      komunikat('Wypłacono ' + pln(wpis.kwota) + ' dla „' + wpis.nazwa + '”.', 'Zajmujesz miejsce ' + miejsce + ' w tabeli. Konto wraca do ' + pln(START) + '.', 'wygrana');
+    } else {
+      var prog = lista[9] ? lista[9].kwota : 0;
+      komunikat('Wypłacono ' + pln(wpis.kwota) + ' dla „' + wpis.nazwa + '”.', 'Do top 10 zabrakło trochę, trzeba mieć więcej niż ' + pln(prog) + '. Konto wraca do ' + pln(START) + '.', '');
+    }
+    el('lokalne').scrollIntoView({ behavior: spokojnie ? 'auto' : 'smooth', block: 'nearest' });
+  });
+
+  // ---------- start ----------
+  var zapisaneLokalne = wczytaj(K_LOKALNE);
+  if (Array.isArray(zapisaneLokalne)) lokalne = zapisaneLokalne.map(czysc).filter(Boolean);
+  odswiez();
+  rysujTabele();
+  if (stan.saldo < MIN) komunikat('Koniec kasy.', BANKRUT, 'porazka');
+
+  fetch('wyniki.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('brak pliku');
+      return r.json();
+    })
+    .then(function (dane) {
+      var tab = Array.isArray(dane) ? dane : (dane && dane.wyniki);
+      plikWyniki = (Array.isArray(tab) ? tab : []).map(czysc).filter(Boolean);
+      // Wyniki, które już trafiły do pliku, przestają być "tylko u Ciebie"
+      var wPliku = {};
+      plikWyniki.forEach(function (e) { wPliku[klucz(e)] = true; });
+      var ile = lokalne.length;
+      lokalne = lokalne.filter(function (e) { return !wPliku[klucz(e)]; });
+      if (lokalne.length !== ile) zapisz(K_LOKALNE, lokalne);
+      rysujTabele();
+    })
+    .catch(function () { brakPliku = true; rysujTabele(); });
+})();
+</script>
+</body>
+</html>
