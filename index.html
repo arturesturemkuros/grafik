@@ -252,8 +252,22 @@
 
     var zmiany = dane.zmiany || {};
     var doradcy = dane.doradcy || dane.pracownicy || [];
+    // "dni" to obiekt {"1": "R", "2": "W", ...} (zalecany zapis) albo dawny tekst "R W P ..." (nadal działa)
     var wiersze = doradcy.map(function (p) {
-      return { p: p, kody: String(p.dni || '').trim().split(/\s+/).filter(Boolean) };
+      var kody = [], braki = [], nadmiar = [];
+      var obiekt = !!p.dni && typeof p.dni === 'object' && !Array.isArray(p.dni);
+      if (obiekt) {
+        Object.keys(p.dni).forEach(function (klucz) {
+          var n = parseInt(klucz, 10);
+          var wart = String(p.dni[klucz] == null ? '' : p.dni[klucz]).trim();
+          if (!(n >= 1) || String(n) !== klucz.trim() || n > liczbaDni) { nadmiar.push(klucz); return; }
+          kody[n - 1] = wart;
+        });
+        for (var d = 1; d <= liczbaDni; d++) { if (!kody[d - 1]) braki.push(d); }
+      } else {
+        kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
+      }
+      return { p: p, kody: kody, braki: braki, nadmiar: nadmiar, obiekt: obiekt };
     });
 
     var dzis = new Date();
@@ -428,10 +442,13 @@
 
     // Kontrola poprawności danych, żeby błąd w pliku był od razu widoczny
     wiersze.forEach(function (w) {
-      if (w.kody.length !== liczbaDni) {
+      if (w.obiekt) {
+        if (w.braki.length) ostrzezenia.push(w.p.imie + ': brak zmiany w dniach: ' + w.braki.join(', ') + '.');
+        if (w.nadmiar.length) ostrzezenia.push(w.p.imie + ': dni, których nie ma w tym miesiącu (ma ' + liczbaDni + ' dni): ' + w.nadmiar.join(', ') + '.');
+      } else if (w.kody.length !== liczbaDni) {
         ostrzezenia.push(w.p.imie + ': podano ' + w.kody.length + ' dni, a w tym miesiącu jest ' + liczbaDni + '.');
       }
-      var nieznane = w.kody.filter(function (k) { return !zmiany[k]; });
+      var nieznane = w.kody.filter(function (k) { return k && !zmiany[k]; });
       if (nieznane.length) {
         ostrzezenia.push(w.p.imie + ': nieznane oznaczenie zmiany (' + nieznane.filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') + ').');
       }
