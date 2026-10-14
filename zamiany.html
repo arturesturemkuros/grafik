@@ -214,8 +214,10 @@
       } else {
         kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
       }
-      return { p: p, kody: kody };
+      return { p: p, kody: kody, grupa: String(p.grupa || '').trim() };
     });
+    // Wymieniać można się tylko w obrębie tej samej grupy (pole "grupa"). Bez pola wszyscy są w jednej grupie.
+    var tejSamejGrupy = function (a, b) { return a.grupa.toLowerCase() === b.grupa.toLowerCase(); };
     if (!wiersze.length) { pokazBlad('W pliku grafik.json nie ma żadnych doradców.'); return; }
 
     // Pierwszy dzień, którego można dotyczyć zamiana: dopiero po dzisiejszym dniu.
@@ -312,9 +314,13 @@
       pods.appendChild(make('span', '', moja.nazwa));
       box.appendChild(pods);
 
+      var wGrupie = wiersze.filter(function (x) { return x !== wybrana && tejSamejGrupy(x, wybrana); });
+      var oGrupie = wybrana.grupa ? ' z grupy „' + wybrana.grupa + '”' : '';
+      if (wybrana.grupa) box.appendChild(make('p', 'opis', 'Wymiana możliwa tylko w grupie „' + wybrana.grupa + '”.'));
+
       var chetni = [];
       wiersze.forEach(function (w) {
-        if (w === wybrana) return;
+        if (w === wybrana || !tejSamejGrupy(w, wybrana)) return;
         var jegoTegoDnia = opis(w.kody[dzien - 1]);
         if (!jegoTegoDnia || czyPraca(jegoTegoDnia)) return;   // bierzemy tylko tych, którzy tego dnia nie pracują
         var dni = [];
@@ -326,8 +332,10 @@
         chetni.push({ w: w, status: jegoTegoDnia, dni: dni });
       });
 
-      if (!chetni.length) {
-        box.appendChild(make('p', 'pusto', 'Tego dnia nikt nie ma wolnego, więc nie ma komu oddać tej zmiany.'));
+      if (!wGrupie.length) {
+        box.appendChild(make('p', 'pusto', (wybrana.grupa ? 'W grupie „' + wybrana.grupa + '” nie ma nikogo poza Tobą' : 'Poza Tobą nikogo nie ma w grafiku') + ', więc nie ma z kim się wymienić.'));
+      } else if (!chetni.length) {
+        box.appendChild(make('p', 'pusto', 'Tego dnia nikt' + oGrupie + ' nie ma wolnego, więc nie ma komu oddać tej zmiany.'));
       } else {
         var zDniami = chetni.filter(function (c) { return c.dni.length; });
         var bez = chetni.filter(function (c) { return !c.dni.length; });
