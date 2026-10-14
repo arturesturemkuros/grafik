@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Grafik pracy</title>
+<title>Siejopedia v0.1</title>
 <style>
   :root {
     --tlo: #f5f6f4;
@@ -39,8 +39,9 @@
     padding: 16px;
   }
   main { max-width: 1200px; margin: 0 auto; }
-  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; margin-bottom: 14px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 14px; }
   h1 { font-size: 1.6rem; margin: 0; font-weight: 700; }
+  #miesiac { font-size: 1.1rem; color: var(--tekst-2); }
   #notatka { color: var(--tekst-2); margin: 0 0 14px; }
   .filtr { margin-left: auto; font-size: .9rem; color: var(--tekst-2); }
   .filtr select {
@@ -53,7 +54,6 @@
   }
   table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: max-content; }
   th, td { border-bottom: 1px solid var(--linia); border-right: 1px solid var(--linia); text-align: center; }
-  th:last-child, td:last-child { border-right: 0; }
   tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
   thead th { padding: 6px 0; min-width: 34px; font-weight: 600; font-size: .85rem; }
   thead th small { display: block; font-weight: 400; color: var(--tekst-2); font-size: .72rem; }
@@ -66,10 +66,27 @@
     background: var(--karta); font-weight: 600; white-space: nowrap; min-width: 120px;
     border-right: 2px solid var(--linia);
   }
-  thead .imie { z-index: 2; }
+  .suma {
+    position: sticky; right: 0; z-index: 1; min-width: 72px; padding: 0 12px;
+    background: var(--karta); font-weight: 700; white-space: nowrap;
+    border-left: 2px solid var(--linia); border-right: 0;
+  }
+  thead .imie, thead .suma { z-index: 2; }
   td { padding: 0; height: 38px; font-weight: 700; font-size: .9rem; }
-  td span { display: flex; align-items: center; justify-content: center; height: 100%; }
+  td.suma { padding: 0 12px; }
+  td.komorka { cursor: pointer; }
+  td.komorka span { display: flex; align-items: center; justify-content: center; height: 100%; }
+  td.komorka:focus-visible { outline: 3px solid var(--dzis); outline-offset: -3px; }
+  td.wybrana { outline: 3px solid var(--tekst); outline-offset: -3px; }
   td.nieznany span { background: var(--blad); color: #fff; }
+  .info {
+    position: absolute; z-index: 10; max-width: 240px;
+    background: var(--tekst); color: var(--karta);
+    border-radius: 8px; padding: 8px 12px; font-size: .9rem; line-height: 1.4;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .25); display: none;
+  }
+  .info.widoczny { display: block; }
+  .info strong { display: block; }
   .legenda { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 0; padding: 0; list-style: none; font-size: .9rem; }
   .legenda li { display: flex; align-items: center; gap: 8px; }
   .legenda .znak {
@@ -91,21 +108,24 @@
 <body>
 <main>
   <header>
-    <h1 id="tytul">Grafik pracy</h1>
+    <h1>Siejopedia v0.1</h1>
+    <span id="miesiac"></span>
     <label class="filtr" id="filtr-wrap" hidden>Pokaż:
       <select id="filtr"></select>
     </label>
   </header>
   <p id="notatka"></p>
   <div id="komunikat" role="alert"></div>
-  <div class="tabela-wrap"><table id="tabela" aria-label="Grafik pracy"></table></div>
+  <div class="tabela-wrap" id="tabela-wrap"><table id="tabela" aria-label="Grafik pracy"></table></div>
   <ul class="legenda" id="legenda"></ul>
   <ul id="ostrzezenia"></ul>
+  <div class="info" id="info" role="status"></div>
 </main>
 
 <script>
 (function () {
   var MIESIACE = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+  var MIESIACE_DOP = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
   var DNI = ['nd','pn','wt','śr','cz','pt','sb'];
 
   var el = function (id) { return document.getElementById(id); };
@@ -120,6 +140,21 @@
     k.textContent = tekst;
     k.className = 'widoczny';
   };
+  var formatGodzin = function (h) {
+    return h.toLocaleString('pl-PL', { maximumFractionDigits: 2 });
+  };
+
+  // Liczba godzin danej zmiany: z pola "godzin" (jeśli jest) albo wyliczona z tekstu "godziny", np. "10 - 18" lub "22:00–6:00".
+  function godzinyZmiany(z) {
+    if (!z) return 0;
+    if (typeof z.godzin === 'number') return z.godzin;
+    var m = /(\d{1,2})(?::(\d{2}))?\s*[–—-]\s*(\d{1,2})(?::(\d{2}))?/.exec(z.godziny || '');
+    if (!m) return 0;
+    var a = (+m[1]) * 60 + (+m[2] || 0);
+    var b = (+m[3]) * 60 + (+m[4] || 0);
+    if (b <= a) b += 24 * 60;
+    return (b - a) / 60;
+  }
 
   // Plik grafik.json jest pobierany za każdym razem od nowa (parametr ?t=), żeby po podmianie nie wyświetlał się stary grafik z pamięci przeglądarki.
   fetch('grafik.json?t=' + Date.now(), { cache: 'no-store' })
@@ -146,63 +181,121 @@
     if (mies < 0 || mies > 11) { pokazBlad('Nieprawidłowy numer miesiąca w polu "miesiac".'); return; }
     var liczbaDni = new Date(rok, mies + 1, 0).getDate();
 
-    el('tytul').textContent = 'Grafik: ' + MIESIACE[mies] + ' ' + rok;
-    document.title = 'Grafik ' + MIESIACE[mies] + ' ' + rok;
+    el('miesiac').textContent = MIESIACE[mies] + ' ' + rok;
     el('notatka').textContent = dane.notatka || '';
     if (!dane.notatka) el('notatka').style.display = 'none';
 
     var zmiany = dane.zmiany || {};
-    var pracownicy = dane.pracownicy || [];
+    var doradcy = dane.doradcy || dane.pracownicy || [];
 
     var dzis = new Date();
     var dzisDzien = (dzis.getFullYear() === rok && dzis.getMonth() === mies) ? dzis.getDate() : -1;
 
-    // Filtr pracowników
+    // Okienko z godzinami po kliknięciu w zmianę
+    var info = el('info');
+    var wybrana = null;
+    function ukryjInfo() {
+      info.className = 'info';
+      if (wybrana) { wybrana.classList.remove('wybrana'); wybrana = null; }
+    }
+    function pokazInfo(td) {
+      if (wybrana === td) { ukryjInfo(); return; }
+      ukryjInfo();
+      var kod = td.getAttribute('data-kod');
+      var def = zmiany[kod];
+      info.textContent = '';
+      info.appendChild(make('strong', '', td.getAttribute('data-imie') + ', ' + td.getAttribute('data-dzien') + ' ' + MIESIACE_DOP[mies]));
+      if (def) {
+        var godz = godzinyZmiany(def);
+        var linia = def.nazwa;
+        if (def.godziny) linia += ': ' + def.godziny;
+        if (godz > 0) linia += ' (' + formatGodzin(godz) + ' godz.)';
+        info.appendChild(make('span', '', linia));
+      } else {
+        info.appendChild(make('span', '', 'Nieznane oznaczenie zmiany: ' + kod));
+      }
+      info.className = 'info widoczny';
+      td.classList.add('wybrana');
+      wybrana = td;
+      var r = td.getBoundingClientRect();
+      var szer = info.offsetWidth;
+      var lewo = r.left + window.pageXOffset + r.width / 2 - szer / 2;
+      var maxLewo = document.documentElement.clientWidth - szer - 8;
+      lewo = Math.max(8, Math.min(lewo, maxLewo));
+      info.style.left = lewo + 'px';
+      info.style.top = (r.bottom + window.pageYOffset + 6) + 'px';
+    }
+    document.addEventListener('click', function (e) {
+      var td = e.target.closest ? e.target.closest('td.komorka') : null;
+      if (td) pokazInfo(td); else ukryjInfo();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') ukryjInfo();
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('komorka')) {
+        e.preventDefault();
+        pokazInfo(e.target);
+      }
+    });
+    el('tabela-wrap').addEventListener('scroll', ukryjInfo);
+    window.addEventListener('resize', ukryjInfo);
+
+    // Filtr doradców
     var filtr = el('filtr');
     filtr.appendChild(new Option('wszystkich', ''));
-    pracownicy.forEach(function (p, i) { filtr.appendChild(new Option(p.imie, String(i))); });
-    el('filtr-wrap').hidden = pracownicy.length < 2;
+    doradcy.forEach(function (p, i) { filtr.appendChild(new Option(p.imie, String(i))); });
+    el('filtr-wrap').hidden = doradcy.length < 2;
     filtr.addEventListener('change', function () { zbuduj(filtr.value); });
 
     function zbuduj(tylko) {
+      ukryjInfo();
       var t = el('tabela');
       t.textContent = '';
 
       var thead = make('thead');
       var wiersz = make('tr');
-      wiersz.appendChild(make('th', 'imie', 'Pracownik'));
+      wiersz.appendChild(make('th', 'imie', 'Doradca'));
       for (var d = 1; d <= liczbaDni; d++) {
         var dow = new Date(rok, mies, d).getDay();
         var th = make('th', (dow === 0 || dow === 6 ? 'weekend ' : '') + (d === dzisDzien ? 'dzis' : ''), String(d));
         th.appendChild(make('small', '', DNI[dow]));
         wiersz.appendChild(th);
       }
+      var thSuma = make('th', 'suma', 'Godz.');
+      thSuma.appendChild(make('small', '', 'razem'));
+      wiersz.appendChild(thSuma);
       thead.appendChild(wiersz);
       t.appendChild(thead);
 
       var tbody = make('tbody');
-      pracownicy.forEach(function (p, i) {
+      doradcy.forEach(function (p, i) {
         if (tylko !== '' && String(i) !== tylko) return;
         var kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
         var tr = make('tr');
         tr.appendChild(make('th', 'imie', p.imie));
+        var suma = 0;
         for (var d = 1; d <= liczbaDni; d++) {
           var dow = new Date(rok, mies, d).getDay();
           var kod = kody[d - 1];
           var def = kod ? zmiany[kod] : null;
-          var cls = (dow === 0 || dow === 6 ? 'weekend ' : '') + (d === dzisDzien ? 'dzis ' : '');
+          var cls = 'komorka ' + (dow === 0 || dow === 6 ? 'weekend ' : '') + (d === dzisDzien ? 'dzis ' : '');
           var td = make('td', cls);
+          td.setAttribute('data-imie', p.imie);
+          td.setAttribute('data-dzien', String(d));
+          td.setAttribute('data-kod', kod || '?');
+          td.setAttribute('tabindex', '0');
+          td.setAttribute('role', 'button');
           var s = make('span', '', kod || '?');
           if (def) {
             s.style.background = def.kolor || 'transparent';
             s.style.color = def.tekst || '#1d2a2e';
-            td.title = def.nazwa + (def.godziny ? ' (' + def.godziny + ')' : '');
+            suma += godzinyZmiany(def);
           } else {
             td.className += 'nieznany';
           }
           td.appendChild(s);
           tr.appendChild(td);
         }
+        tr.appendChild(make('td', 'suma', formatGodzin(suma)));
         tbody.appendChild(tr);
       });
       t.appendChild(tbody);
@@ -224,7 +317,7 @@
     });
 
     // Kontrola poprawności danych, żeby błąd w pliku był od razu widoczny
-    pracownicy.forEach(function (p) {
+    doradcy.forEach(function (p) {
       var kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
       if (kody.length !== liczbaDni) {
         ostrzezenia.push(p.imie + ': podano ' + kody.length + ' dni, a w tym miesiącu jest ' + liczbaDni + '.');
