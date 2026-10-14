@@ -44,6 +44,12 @@
       "kolor": "#f7c59f",
       "tekst": "#3b1600"
     },
+    "MG": {
+      "nazwa": "Magazynier",
+      "godziny": "7:00-15",
+      "kolor": "#f11a4b",
+      "tekst": "#311600"
+    },
     "W": {
       "nazwa": "Wolne",
       "kolor": "#e6e9e8",
@@ -98,7 +104,7 @@
     },
     {
       "imie": "Magazynier",
-      "dni": "R W W R R R R R W W R R R R R W W W P P P P P W W R R R R R"
+      "dni": "MG MG W W MG MG W MG MG MG W MG MG W MG MG MG W MG MG W MG MG MG W MG MG MG MG MG W"
     },
     {
       "imie": "Kieras",
