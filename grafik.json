@@ -16,7 +16,7 @@
     },
     "GR": {
       "nazwa": "Popołudnie do 20",
-      "godziny": "12–20",
+      "godziny": "10–20",
       "kolor": "#8ecae6",
       "tekst": "#0b2a3a"
     },
@@ -60,7 +60,7 @@
     },
     {
       "imie": "Gruby",
-      "dni": "R W W R R R R R W W R R R R R W W W P P P P P W W R R R R R"
+      "dni": ""
     },
     {
       "imie": "Top G",
