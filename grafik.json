@@ -31,21 +31,37 @@
       "tekst": "#5a1d1a"
     }
   },
-  "pracownicy": [
+  "doradcy": [
     {
-      "imie": "Anna K.",
+      "imie": "Mike",
       "dni": "W R R R R R W W R R R R R W W P P P P P W W U U U U U W W R"
     },
     {
-      "imie": "Piotr M.",
+      "imie": "Sosna",
       "dni": "W P P P P P W W P P P P P W W N N N N N W W R R R R R W W P"
     },
     {
-      "imie": "Marta S.",
+      "imie": "Gruby",
       "dni": "R W W R R R R R W W R R R R R W W W P P P P P W W R R R R R"
     },
     {
-      "imie": "Tomek W.",
+      "imie": "Top G",
+      "dni": "N N W W P P P P P W W N N N N N W W W R R R R R W W P P P P"
+    },
+    {
+      "imie": "Kwiatek",
+      "dni": "W R R R R R W W R R R R R W W P P P P P W W U U U U U W W R"
+    },
+    {
+      "imie": "Siłacz",
+      "dni": "W P P P P P W W P P P P P W W N N N N N W W R R R R R W W P"
+    },
+    {
+      "imie": "Magazynier",
+      "dni": "R W W R R R R R W W R R R R R W W W P P P P P W W R R R R R"
+    },
+    {
+      "imie": "Kieras",
       "dni": "N N W W P P P P P W W N N N N N W W W R R R R R W W P P P P"
     }
   ]
