@@ -134,25 +134,18 @@
   #ostrzezenia { margin: 14px 0 0; padding: 10px 14px 10px 32px; border-radius: 8px; border: 1px solid var(--linia); color: var(--tekst-2); font-size: .9rem; display: none; }
   #ostrzezenia.widoczny { display: block; }
   /* ===== Fajerwerki z liter: tylko na komputerze (od 1200 px szerokości) ===== */
-  .niebo {
-    display: none; margin-top: 24px; padding: 10px 14px;
-    background: #0e1418; border: 1px solid var(--linia); border-radius: 8px; overflow: hidden;
-  }
+  .niebo { display: none; margin-top: 24px; padding: 10px 14px; overflow: hidden; }
   .niebo[hidden] { display: none !important; }
   @media (min-width: 1200px) { .niebo { display: block; } }
   .fajerwerki {
+    --fajerwerki: #000;
     margin: 0 auto; width: fit-content; height: 23em; overflow: hidden;
     font: 13px/1.15 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    color: #e6eceb; white-space: pre; user-select: none;
+    color: var(--fajerwerki); white-space: pre; user-select: none;
   }
   .fajerwerki i { font-style: normal; }
-  .fajerwerki .c0 { color: #ffd166; }
-  .fajerwerki .c1 { color: #ff6b6b; }
-  .fajerwerki .c2 { color: #5ec2b7; }
-  .fajerwerki .c3 { color: #8ecae6; }
-  .fajerwerki .c4 { color: #c77dff; }
-  .fajerwerki .c5 { color: #f7c59f; }
-  .fajerwerki .c6 { color: #e6eceb; }
+  /* w ciemnym motywie czarne litery byłyby niewidoczne, więc tam są jasne */
+  @media (prefers-color-scheme: dark) { .fajerwerki { --fajerwerki: #e6eceb; } }
   @media (max-width: 600px) {
     body { padding: 8px; }
     h1 { font-size: 1.25rem; }
