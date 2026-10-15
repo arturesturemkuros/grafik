@@ -122,13 +122,11 @@
   .ranking tr.nowy td { background: var(--nowy); font-weight: 700; }
   .ranking .lokalnie { margin-left: 6px; font-size: .75rem; font-weight: 600; color: var(--tekst-2); }
   .info-tabeli { margin: 8px 0 0; color: var(--tekst-2); font-size: .85rem; }
-  .lokalne { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--linia); border-radius: 8px; font-size: .9rem; }
-  .lokalne p { margin: 0 0 8px; }
-  .lokalne .rzad { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ranking h2:focus { outline: none; }
+  .lokalne { margin-top: 14px; }
   .male { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--akcent); background: transparent; color: var(--akcent); font-weight: 700; cursor: pointer; }
-  .lokalne .potwierdzenie { margin: 8px 0 0; color: var(--dobrze); }
-  .lokalne textarea { display: none; width: 100%; margin-top: 8px; min-height: 120px; font: .8rem ui-monospace, Menlo, Consolas, monospace; color: var(--tekst); background: var(--karta); border: 1px solid var(--linia); border-radius: 6px; }
-  .lokalne textarea.widoczny { display: block; }
+  .male.czysc { border-color: var(--zle); color: var(--zle); }
+  .male.czysc.pewny { background: var(--zle); color: var(--karta); }
 
   /* ===== Przyciski na dole: dwa duże na środku, po bokach dodaj i odejmij ===== */
   .bar { position: sticky; bottom: 0; z-index: 5; margin-top: auto; padding: 12px 0 14px; background: var(--tlo); border-top: 1px solid var(--linia); }
@@ -222,20 +220,14 @@
     </section>
 
     <section class="ranking" aria-label="Najlepsze wypłaty">
-      <h2>Top 10 wypłat</h2>
+      <h2 id="tytul-rankingu" tabindex="-1">Top 10 wypłat</h2>
       <table>
         <thead><tr><th>Miejsce</th><th>Nazwa</th><th class="k">Wypłata</th></tr></thead>
         <tbody id="tabela"></tbody>
       </table>
-      <p class="info-tabeli" id="info-tabeli"></p>
+      <p class="info-tabeli" id="info-tabeli" role="status"></p>
       <div class="lokalne" id="lokalne" hidden>
-        <p id="lokalne-opis"></p>
-        <div class="rzad">
-          <button class="male" id="kopiuj" type="button">Skopiuj wyniki.json</button>
-          <button class="male" id="pobierz" type="button">Pobierz wyniki.json</button>
-        </div>
-        <p class="potwierdzenie" id="potwierdzenie" role="status"></p>
-        <textarea id="kod" readonly aria-label="Zawartość pliku wyniki.json"></textarea>
+        <button class="male czysc" id="czysc" type="button">Wyczyść wyniki</button>
       </div>
     </section>
   </div>
@@ -271,7 +263,7 @@
 <script>
 (function () {
   var START = 1000, MIN = 10, MAX = 10000, KROK = 10, STAWKA_START = 50;
-  var SEGMENTY = 18, KAT = 360 / SEGMENTY, CZAS_OBROTU = 2400, MAX_WYNIKOW = 100;
+  var SEGMENTY = 18, KAT = 360 / SEGMENTY, CZAS_OBROTU = 2400;
   var K_STAN = 'northbet-stan', K_LOKALNE = 'northbet-lokalne';
 
   var WYGRANA = [
@@ -331,7 +323,7 @@
     seria: 0
   };
   var zajety = false, obrot = 0, ostatniKlucz = null;
-  var plikWyniki = [], lokalne = [], brakPliku = false;
+  var plikWyniki = [], lokalne = [], brakPliku = false, informacja = '';
 
   function dopasujStawke() {
     if (stan.saldo < MIN) { stan.stawka = MIN; return; }
@@ -417,12 +409,6 @@
     return lista;
   }
 
-  function odmiana(n) {
-    if (n === 1) return 'wynik';
-    var d = n % 10, s = n % 100;
-    return d >= 2 && d <= 4 && !(s >= 12 && s <= 14) ? 'wyniki' : 'wyników';
-  }
-
   function rysujTabele() {
     var lista = polacz();
     var tbody = el('tabela');
@@ -437,44 +423,33 @@
       tr.appendChild(make('td', 'k', e ? pln(e.kwota) : '—'));
       tbody.appendChild(tr);
     }
-    el('info-tabeli').textContent = brakPliku ? 'Nie udało się wczytać wyniki.json, więc tabela pokazuje tylko wyniki z tej przeglądarki.' : '';
-    var box = el('lokalne');
-    box.hidden = lokalne.length === 0;
-    if (lokalne.length) {
-      el('lokalne-opis').textContent = 'Masz ' + lokalne.length + ' ' + odmiana(lokalne.length) +
-        ' zapisanych tylko w tej przeglądarce. Żeby zobaczyli je wszyscy, wklej kod do pliku wyniki.json w repozytorium.';
+    el('info-tabeli').textContent = informacja || (brakPliku ? 'Nie udało się wczytać wyniki.json, więc tabela pokazuje tylko wyniki z tej przeglądarki.' : '');
+    el('lokalne').hidden = lokalne.length === 0;   // przycisk czyszczenia jest tylko wtedy, gdy są wyniki zapisane w tej przeglądarce
+  }
+
+  // Wyczyść wyniki: wymaga drugiego kliknięcia w ciągu 4 sekund. Czyści tylko wyniki zapisane w tej przeglądarce.
+  var przyciskCzysc = el('czysc'), czyscTimer = null;
+  function anulujCzyszczenie() {
+    clearTimeout(czyscTimer);
+    przyciskCzysc.textContent = 'Wyczyść wyniki';
+    przyciskCzysc.classList.remove('pewny');
+  }
+  przyciskCzysc.addEventListener('click', function () {
+    if (!przyciskCzysc.classList.contains('pewny')) {
+      przyciskCzysc.textContent = 'Na pewno? Kliknij jeszcze raz';
+      przyciskCzysc.classList.add('pewny');
+      czyscTimer = setTimeout(anulujCzyszczenie, 4000);
+      return;
     }
-  }
-
-  function jsonWynikow() {
-    var wpisy = polacz().slice(0, MAX_WYNIKOW).map(function (e) { return { nazwa: e.nazwa, kwota: e.kwota, czas: e.czas }; });
-    if (!wpisy.length) return '{\n  "wyniki": []\n}\n';
-    return '{\n  "wyniki": [\n' + wpisy.map(function (e) { return '    ' + JSON.stringify(e); }).join(',\n') + '\n  ]\n}\n';
-  }
-
-  function potwierdz(tekst) { el('potwierdzenie').textContent = tekst; }
-  el('kopiuj').addEventListener('click', function () {
-    var tekst = jsonWynikow(), kod = el('kod');
-    var awaryjnie = function () {
-      kod.value = tekst; kod.className = 'widoczny'; kod.focus(); kod.select();
-      potwierdz('Nie udało się skopiować automatycznie. Zaznaczyłem kod, skopiuj go ręcznie.');
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(tekst).then(function () {
-        potwierdz('Skopiowano. Wklej w pliku wyniki.json na GitHubie i zatwierdź zmianę.');
-      }, awaryjnie);
-    } else awaryjnie();
-  });
-  el('pobierz').addEventListener('click', function () {
-    var blob = new Blob([jsonWynikow()], { type: 'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'wyniki.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-    potwierdz('Pobrano wyniki.json. Wgraj go do repozytorium w miejsce starego.');
+    anulujCzyszczenie();
+    lokalne = [];
+    ostatniKlucz = null;
+    zapisz(K_LOKALNE, lokalne);
+    informacja = plikWyniki.length
+      ? 'Wyczyszczono wyniki z tej przeglądarki. Wyniki z pliku wyniki.json zostają: żeby je usunąć, wgraj do repozytorium pusty plik wyniki.json.'
+      : 'Wyczyszczono wyniki z tej przeglądarki.';
+    rysujTabele();
+    el('tytul-rankingu').focus();
   });
 
   // ---------- gra ----------
@@ -551,6 +526,7 @@
     stan.nazwa = poleNazwy.value = nazwa;
     stan.saldo = START; stan.stawka = STAWKA_START; stan.seria = 0;
     zapiszStan();
+    informacja = '';
     rysujTabele();
     odswiez();
     if (miejsce && miejsce <= 10) {
@@ -559,7 +535,7 @@
       var prog = lista[9] ? lista[9].kwota : 0;
       komunikat('Wypłacono ' + pln(wpis.kwota) + ' dla „' + wpis.nazwa + '”.', 'Do top 10 zabrakło trochę, trzeba mieć więcej niż ' + pln(prog) + '. Konto wraca do ' + pln(START) + '.', '');
     }
-    el('lokalne').scrollIntoView({ behavior: spokojnie ? 'auto' : 'smooth', block: 'nearest' });
+    (document.querySelector('#tabela tr.nowy') || el('tabela')).scrollIntoView({ behavior: spokojnie ? 'auto' : 'smooth', block: 'nearest' });
   });
 
   // ---------- start ----------
