@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Siejopedia v1.1</title>
+<title>Siejopedia v1.2</title>
 <style>
   :root {
     --tlo: #f5f6f4;
@@ -78,6 +78,10 @@
   td.wybrana { outline: 3px solid var(--tekst); outline-offset: -3px; }
   td.nieznany span { background: var(--blad); color: #fff; }
   td.weekend { background: var(--weekend); }
+  /* Kliknięty dzień: cała jego linia (kolumna na komputerze, wiersz na telefonie) jest przyciemniona */
+  .przyciemnione { filter: brightness(.7); }
+  th.wybieralny { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  th.wybieralny:focus-visible { outline: 3px solid var(--dzis); outline-offset: -3px; }
 
   /* ===== Układ na komputer: doradcy w wierszach, dni w kolumnach ===== */
   .widok-waski { display: none; }
@@ -166,7 +170,7 @@
 <body>
 <main>
   <header>
-    <h1>Siejopedia v1.1</h1>
+    <h1>Siejopedia v1.2</h1>
     <span id="miesiac"></span>
     <div class="narzedzia">
       <label class="filtr" id="filtr-wrap" hidden>Pokaż:
@@ -336,6 +340,33 @@
     });
     window.addEventListener('resize', ukryjInfo);
 
+    // Kliknięcie w numer dnia przyciemnia całą linię tego dnia; ponowne kliknięcie (lub inny dzień) zmienia/zdejmuje
+    var przyciemnionyDzien = 0;
+    function zastosujPrzyciemnienie() {
+      var nodes = document.querySelectorAll('[data-dzien]');
+      Array.prototype.forEach.call(nodes, function (n) {
+        var on = przyciemnionyDzien !== 0 && n.getAttribute('data-dzien') === String(przyciemnionyDzien);
+        n.classList.toggle('przyciemnione', on);
+        if (n.tagName === 'TH') n.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+    function dzienKlikalny(th, d) {
+      th.setAttribute('data-dzien', String(d));
+      th.classList.add('wybieralny');
+      th.setAttribute('tabindex', '0');
+      th.setAttribute('role', 'button');
+      th.setAttribute('aria-pressed', 'false');
+      th.title = 'Kliknij, aby przyciemnić ' + d + ' ' + MIESIACE_DOP[mies];
+      var przelacz = function () {
+        przyciemnionyDzien = przyciemnionyDzien === d ? 0 : d;
+        zastosujPrzyciemnienie();
+      };
+      th.addEventListener('click', przelacz);
+      th.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); przelacz(); }
+      });
+    }
+
     // Jeden kafelek (komórka) grafiku, wspólny dla obu układów
     function komorka(imie, d, kod) {
       var def = kod ? zmiany[kod] : null;
@@ -365,6 +396,7 @@
       for (var d = 1; d <= liczbaDni; d++) {
         var th = make('th', (weekend(d) ? 'weekend ' : '') + (d === dzisDzien ? 'dzis' : ''), String(d));
         th.appendChild(make('small', '', DNI[dow(d)]));
+        dzienKlikalny(th, d);
         wiersz.appendChild(th);
       }
       var thSuma = make('th', 'suma', 'Godz.');
@@ -411,6 +443,7 @@
         var tr = make('tr');
         var thD = make('th', 'dzien' + (weekend(d) ? ' weekend' : '') + (d === dzisDzien ? ' dzis' : ''), String(d));
         thD.appendChild(make('small', '', DNI[dow(d)]));
+        dzienKlikalny(thD, d);
         tr.appendChild(thD);
         lista.forEach(function (w, j) {
           var k = komorka(w.p.imie, d, w.kody[d - 1]);
@@ -431,6 +464,7 @@
       var lista = wiersze.filter(function (w, i) { return tylko === '' || String(i) === tylko; });
       budujSzeroka(lista);
       budujWaska(lista);
+      zastosujPrzyciemnienie();
     }
 
     // Filtr doradców
