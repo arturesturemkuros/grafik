@@ -139,6 +139,13 @@
   .srodek { grid-area: srodek; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .gr-podpis { display: block; margin-bottom: 4px; font-size: .8rem; color: var(--tekst-2); text-align: center; }
   .gr-przyciski { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .gr-przyciski .duze-licz { font-size: .85rem; }
+  .male.allin { grid-column: span 2; border-color: var(--zle); background: var(--zle); color: #fff; font-weight: 800; letter-spacing: .04em; min-height: 48px; }
+  .male.allin:hover:not(:disabled) { filter: brightness(1.1); }
+  .male.allin.aktywny { outline: 3px solid var(--tekst); outline-offset: 2px; }
+  .allin-info { margin: 6px 0 0; font-size: .75rem; line-height: 1.3; color: var(--tekst-2); text-align: center; }
+  .allin-info.aktywny { color: var(--zle); font-weight: 700; }
+  .male:disabled, .duzy:disabled { opacity: .5; cursor: not-allowed; }
   .male.licz { padding: 0; border-color: var(--linia); background: var(--karta); color: var(--tekst); min-height: 48px; font-size: .95rem; font-variant-numeric: tabular-nums; }
   .male.licz:hover:not(:disabled) { border-color: var(--akcent); }
   .duzy {
@@ -164,6 +171,8 @@
     .gr-podpis { font-size: .7rem; }
     .gr-przyciski { gap: 3px; }
     .male.licz { font-size: .8rem; min-height: 44px; }
+    .gr-przyciski .duze-licz { font-size: .7rem; }
+    .male.allin { min-height: 44px; font-size: .78rem; letter-spacing: 0; }
   }
   @media (prefers-reduced-motion: no-preference) {
     .duzy { transition: transform .12s; }
@@ -189,7 +198,7 @@
     <section class="lewa" aria-label="Gra">
       <div class="stan">
         <div class="pole"><span class="etyk">Do wydania</span><strong id="saldo">1000 PLN</strong></div>
-        <div class="pole"><span class="etyk">Stawka</span><strong id="stawka">50 PLN</strong><span class="drobne">od 10 do 10000 PLN</span></div>
+        <div class="pole"><span class="etyk">Stawka</span><strong id="stawka">50 PLN</strong><span class="drobne">od 10 PLN do całego salda</span></div>
         <button class="od-nowa" id="od-nowa" type="button">Zacznij od nowa</button>
       </div>
 
@@ -241,6 +250,8 @@
           <button class="male licz" type="button" data-zmiana="-50" aria-label="Odejmij 50">−50</button>
           <button class="male licz" type="button" data-zmiana="-20" aria-label="Odejmij 20">−20</button>
           <button class="male licz" type="button" data-zmiana="-10" aria-label="Odejmij 10">−10</button>
+          <button class="male licz duze-licz" type="button" data-zmiana="-1000" aria-label="Odejmij 1000">−1000</button>
+          <button class="male licz duze-licz" type="button" data-zmiana="-5000" aria-label="Odejmij 5000">−5000</button>
         </div>
       </div>
       <div class="srodek">
@@ -254,7 +265,11 @@
           <button class="male licz" type="button" data-zmiana="20" aria-label="Dodaj 20">+20</button>
           <button class="male licz" type="button" data-zmiana="50" aria-label="Dodaj 50">+50</button>
           <button class="male licz" type="button" data-zmiana="100" aria-label="Dodaj 100">+100</button>
+          <button class="male licz duze-licz" type="button" data-zmiana="1000" aria-label="Dodaj 1000">+1000</button>
+          <button class="male licz duze-licz" type="button" data-zmiana="5000" aria-label="Dodaj 5000">+5000</button>
+          <button class="male allin" id="allin" type="button" aria-pressed="false">ALL IN</button>
         </div>
+        <p class="allin-info" id="allin-info">ALL IN: 10% szans na wygranie 10x więcej, 90% na stratę wszystkiego.</p>
       </div>
     </div>
   </div>
@@ -262,7 +277,8 @@
 
 <script>
 (function () {
-  var START = 1000, MIN = 10, MAX = 10000, KROK = 10, STAWKA_START = 50;
+  var START = 1000, MIN = 10, KROK = 10, STAWKA_START = 50;
+  var SZANSA_ALLIN = 10, MNOZNIK_ALLIN = 10;   // ALL IN: 10% szans na wygraną 10x stawki
   var SEGMENTY = 18, KAT = 360 / SEGMENTY, CZAS_OBROTU = 2400;
   var K_STAN = 'northbet-stan', K_LOKALNE = 'northbet-lokalne';
 
@@ -286,6 +302,16 @@
   ];
   var SERIA_W = ['Seria wygranych! NorthBet patrzy na Ciebie podejrzliwie.', 'Trzy z rzędu. Albo masz szczęście, albo znasz kierownika.'];
   var SERIA_P = ['Trzecia porażka z rzędu. Może czas na zamianę zmiany?', 'Seria porażek. Rozważ wypłatę resztek.'];
+  var WYGRANA_ALLIN = [
+    'ALL IN trafiony! Zadzwoń do kierownika i powiedz, że dziś Cię nie będzie.',
+    'Jeden na dziesięciu. Dziś jesteś tym jednym.',
+    'Dziesięć razy więcej! NorthBet właśnie sprawdza, czy to nie błąd.'
+  ];
+  var PORAZKA_ALLIN = [
+    'ALL IN i pusto. Dziewięć razy na dziesięć tak to się kończy.',
+    'Odwaga godna podziwu, rachunek już mniej.',
+    'Wszystko albo nic. Padło na nic.'
+  ];
   var BANKRUT = 'Pusto na koncie. NorthBet zaprasza z powrotem do pracy.';
 
   var el = function (id) { return document.getElementById(id); };
@@ -320,14 +346,16 @@
     saldo: liczbaOk(zapis.saldo) ? zapis.saldo : START,
     stawka: liczbaOk(zapis.stawka) ? zapis.stawka : STAWKA_START,
     nazwa: typeof zapis.nazwa === 'string' ? zapis.nazwa.slice(0, 20) : '',
-    seria: 0
+    seria: 0,
+    allin: false
   };
   var zajety = false, obrot = 0, ostatniKlucz = null;
   var plikWyniki = [], lokalne = [], brakPliku = false, informacja = '';
 
   function dopasujStawke() {
-    if (stan.saldo < MIN) { stan.stawka = MIN; return; }
-    stan.stawka = Math.max(MIN, Math.min(stan.stawka, MAX, stan.saldo));
+    if (stan.saldo < MIN) { stan.stawka = MIN; stan.allin = false; return; }
+    if (stan.allin) { stan.stawka = stan.saldo; return; }
+    stan.stawka = Math.max(MIN, Math.min(stan.stawka, stan.saldo));
   }
   function zapiszStan() { zapisz(K_STAN, { saldo: stan.saldo, stawka: stan.stawka, nazwa: stan.nazwa }); }
 
@@ -374,11 +402,16 @@
     el('saldo').textContent = pln(stan.saldo);
     el('stawka').textContent = pln(stan.stawka);
     el('wyplac').textContent = stan.saldo >= MIN ? 'Wypłać ' + pln(stan.saldo) : 'Wypłać';
-    Array.prototype.forEach.call(document.querySelectorAll('.duzy .za'), function (s) { s.textContent = 'za ' + pln(stan.stawka); });
+    Array.prototype.forEach.call(document.querySelectorAll('.duzy .za'), function (s) { s.textContent = (stan.allin ? 'ALL IN ' : 'za ') + pln(stan.stawka); });
+    el('allin').classList.toggle('aktywny', stan.allin);
+    el('allin').setAttribute('aria-pressed', stan.allin ? 'true' : 'false');
+    el('allin-info').classList.toggle('aktywny', stan.allin);
+    el('stawka').classList.toggle('allin-on', stan.allin);
     var blok = zajety || bankrut;
     el('czarne').disabled = blok;
     el('czerwone').disabled = blok;
     el('wyplac').disabled = zajety || bankrut;
+    el('allin').disabled = blok;
     Array.prototype.forEach.call(document.querySelectorAll('[data-zmiana]'), function (b) { b.disabled = blok; });
     el('od-nowa').disabled = zajety;
     el('od-nowa').className = 'od-nowa' + (bankrut ? ' wazny' : '');
@@ -456,23 +489,28 @@
   function postaw(wybor) {
     if (zajety || stan.saldo < MIN) return;
     dopasujStawke();
-    var stawka = stan.stawka;
+    var stawka = stan.stawka, allin = stan.allin;
     zajety = true;
     odswiez();
-    komunikat('Kręcimy…', 'Stawka ' + pln(stawka) + ' na ' + wybor + '.', '');
-    var wypadlo = losujBit() === 1 ? 'czerwone' : 'czarne';
+    komunikat(allin ? 'ALL IN! Kręcimy…' : 'Kręcimy…', (allin ? 'Cała kasa, ' + pln(stawka) + ', na ' : 'Stawka ' + pln(stawka) + ' na ') + wybor + '.', '');
+    var wygrana = allin ? los(100) < SZANSA_ALLIN : losujBit() === 1 === (wybor === 'czerwone');
+    var przeciwny = wybor === 'czerwone' ? 'czarne' : 'czerwone';
+    var wypadlo = wygrana ? wybor : przeciwny;   // koło zatrzymuje się na kolorze zgodnym z wynikiem losowania
+    var zysk = allin ? stawka * MNOZNIK_ALLIN : stawka;
     zakrec(wypadlo, function () {
-      var wygrana = wypadlo === wybor;
-      stan.saldo += wygrana ? stawka : -stawka;
+      stan.saldo += wygrana ? zysk : -stawka;
+      stan.allin = false;
       stan.seria = wygrana ? (stan.seria > 0 ? stan.seria + 1 : 1) : (stan.seria < 0 ? stan.seria - 1 : -1);
       zajety = false;
       dopasujStawke();
       zapiszStan();
       blysnij(wygrana ? 'plus' : 'minus');
-      var zart = wygrana
+      var zart = allin
+        ? (wygrana ? wybierz(WYGRANA_ALLIN) : (stan.saldo < MIN ? BANKRUT : wybierz(PORAZKA_ALLIN)))
+        : wygrana
         ? (stan.seria >= 3 ? wybierz(SERIA_W) : wybierz(WYGRANA))
         : (stan.saldo < MIN ? BANKRUT : stan.seria <= -3 ? wybierz(SERIA_P) : wybierz(PORAZKA));
-      komunikat('Wypadło ' + wypadlo + '. ' + (wygrana ? 'Wygrywasz ' : 'Tracisz ') + pln(stawka) + '.', zart, wygrana ? 'wygrana' : 'porazka');
+      komunikat((allin ? 'ALL IN! ' : '') + 'Wypadło ' + wypadlo + '. ' + (wygrana ? 'Wygrywasz ' : 'Tracisz ') + pln(wygrana ? zysk : stawka) + '.', zart, wygrana ? 'wygrana' : 'porazka');
       odswiez();
     });
   }
@@ -482,15 +520,30 @@
   Array.prototype.forEach.call(document.querySelectorAll('[data-zmiana]'), function (b) {
     b.addEventListener('click', function () {
       if (zajety || stan.saldo < MIN) return;
+      stan.allin = false;
       stan.stawka += parseInt(b.getAttribute('data-zmiana'), 10);
       odswiez();
       zapiszStan();
     });
   });
 
+  el('allin').addEventListener('click', function () {
+    if (zajety || stan.saldo < MIN) return;
+    stan.allin = !stan.allin;
+    if (stan.allin) {
+      odswiez();
+      komunikat('ALL IN: ' + pln(stan.saldo) + ' na jedną kartę.', 'Szansa 10% na wygraną 10x stawki (' + pln(stan.saldo * MNOZNIK_ALLIN) + '), 90% na stratę wszystkiego. Wybierz kolor.', '');
+    } else {
+      stan.stawka = Math.max(MIN, Math.min(STAWKA_START, stan.saldo));
+      odswiez();
+      komunikat('Postaw na czarne albo czerwone.', 'Szansa to równe 50 na 50.', '');
+    }
+    zapiszStan();
+  });
+
   function odNowa() {
     if (zajety) return;
-    stan.saldo = START; stan.stawka = STAWKA_START; stan.seria = 0;
+    stan.saldo = START; stan.stawka = STAWKA_START; stan.seria = 0; stan.allin = false;
     zapiszStan();
     komunikat('Nowa gra: znowu ' + pln(START) + '.', 'Powodzenia. Przyda się.', '');
     odswiez();
@@ -524,7 +577,7 @@
     for (var i = 0; i < lista.length; i++) if (klucz(lista[i]) === ostatniKlucz) { miejsce = i + 1; break; }
 
     stan.nazwa = poleNazwy.value = nazwa;
-    stan.saldo = START; stan.stawka = STAWKA_START; stan.seria = 0;
+    stan.saldo = START; stan.stawka = STAWKA_START; stan.seria = 0; stan.allin = false;
     zapiszStan();
     informacja = '';
     rysujTabele();
