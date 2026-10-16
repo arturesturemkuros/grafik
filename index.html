@@ -134,7 +134,7 @@
   .info {
     position: absolute; z-index: 10; max-width: 240px;
     background: var(--tekst); color: var(--karta);
-    border-radius: 8px; padding: 8px 12px; font-size: .9rem; line-height: 1.4;
+    border-radius: 8px; padding: 8px 12px; font-size: .9rem; line-height: 1.3;
     box-shadow: 0 6px 20px rgba(0, 0, 0, .25); display: none;
   }
   .info.widoczny { display: block; }
@@ -343,6 +343,8 @@
     window.addEventListener('resize', ukryjInfo);
 
     // Kliknięcie w numer dnia przyciemnia całą linię tego dnia; ponowne kliknięcie (lub inny dzień) zmienia/zdejmuje
+    // Magazynier i kierownik (grupy "magazyn" i "kierownik") nie są podświetlani
+    var podswietlany = function (w) { var g = String(w.p.grupa || '').trim().toLowerCase(); return g !== 'magazyn' && g !== 'kierownik'; };
     var przyciemnionyDzien = 0;
     var pracuje = {};   // pracuje[imie][dzien] = true, gdy zmiana ma godziny
     function zastosujPrzyciemnienie() {
@@ -419,7 +421,7 @@
       lista.forEach(function (w) {
         var tr = make('tr');
         var thI = make('th', 'imie', w.p.imie);
-        thI.setAttribute('data-pracownik', w.p.imie);
+        if (podswietlany(w)) thI.setAttribute('data-pracownik', w.p.imie);
         tr.appendChild(thI);
         var suma = 0;
         for (var d = 1; d <= liczbaDni; d++) {
@@ -443,7 +445,7 @@
       lista.forEach(function (w) {
         var th = make('th', 'dor');
         th.title = w.p.imie;
-        th.setAttribute('data-pracownik', w.p.imie);
+        if (podswietlany(w)) th.setAttribute('data-pracownik', w.p.imie);
         th.appendChild(make('span', 'pion', w.p.imie));
         wiersz.appendChild(th);
       });
