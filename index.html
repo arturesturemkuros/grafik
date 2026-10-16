@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Siejopedia v1.2</title>
+<title>Siejopedia v1.3</title>
 <style>
   :root {
     --tlo: #f5f6f4;
@@ -79,7 +79,9 @@
   td.nieznany span { background: var(--blad); color: #fff; }
   td.weekend { background: var(--weekend); }
   /* Kliknięty dzień: cała jego linia (kolumna na komputerze, wiersz na telefonie) jest przyciemniona */
-  .przyciemnione { filter: brightness(0.8); }
+  .przyciemnione { filter: brightness(.7); }
+  /* Imiona doradców, którzy w klikniętym dniu pracują: #c977bc przy 70% widoczności */
+  th.pracuje { background: rgba(201, 119, 188, .7) !important; color: #1b0a18; }
   th.wybieralny { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
   th.wybieralny:focus-visible { outline: 3px solid var(--dzis); outline-offset: -3px; }
 
@@ -170,7 +172,7 @@
 <body>
 <main>
   <header>
-    <h1>Siejopedia v1.2</h1>
+    <h1>Siejopedia v1.3</h1>
     <span id="miesiac"></span>
     <div class="narzedzia">
       <label class="filtr" id="filtr-wrap" hidden>Pokaż:
@@ -342,12 +344,18 @@
 
     // Kliknięcie w numer dnia przyciemnia całą linię tego dnia; ponowne kliknięcie (lub inny dzień) zmienia/zdejmuje
     var przyciemnionyDzien = 0;
+    var pracuje = {};   // pracuje[imie][dzien] = true, gdy zmiana ma godziny
     function zastosujPrzyciemnienie() {
       var nodes = document.querySelectorAll('[data-dzien]');
       Array.prototype.forEach.call(nodes, function (n) {
         var on = przyciemnionyDzien !== 0 && n.getAttribute('data-dzien') === String(przyciemnionyDzien);
         n.classList.toggle('przyciemnione', on);
         if (n.tagName === 'TH') n.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      var imiona = document.querySelectorAll('th[data-pracownik]');
+      Array.prototype.forEach.call(imiona, function (h) {
+        var p = pracuje[h.getAttribute('data-pracownik')];
+        h.classList.toggle('pracuje', !!(przyciemnionyDzien && p && p[przyciemnionyDzien]));
       });
     }
     function dzienKlikalny(th, d) {
@@ -383,7 +391,9 @@
         s.style.color = def.tekst || '#1d2a2e';
       }
       td.appendChild(s);
-      return { td: td, godz: def ? godzinyZmiany(def) : 0 };
+      var godz = def ? godzinyZmiany(def) : 0;
+      (pracuje[imie] = pracuje[imie] || {})[d] = godz > 0;
+      return { td: td, godz: godz };
     }
 
     // Układ na komputer: doradcy w wierszach, dni w kolumnach, suma godzin po prawej
@@ -408,7 +418,9 @@
       var tbody = make('tbody');
       lista.forEach(function (w) {
         var tr = make('tr');
-        tr.appendChild(make('th', 'imie', w.p.imie));
+        var thI = make('th', 'imie', w.p.imie);
+        thI.setAttribute('data-pracownik', w.p.imie);
+        tr.appendChild(thI);
         var suma = 0;
         for (var d = 1; d <= liczbaDni; d++) {
           var k = komorka(w.p.imie, d, w.kody[d - 1]);
@@ -431,6 +443,7 @@
       lista.forEach(function (w) {
         var th = make('th', 'dor');
         th.title = w.p.imie;
+        th.setAttribute('data-pracownik', w.p.imie);
         th.appendChild(make('span', 'pion', w.p.imie));
         wiersz.appendChild(th);
       });
