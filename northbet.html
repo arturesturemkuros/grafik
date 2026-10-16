@@ -269,7 +269,7 @@
           <button class="male licz duze-licz" type="button" data-zmiana="5000" aria-label="Dodaj 5000">+5000</button>
           <button class="male allin" id="allin" type="button" aria-pressed="false">ALL IN</button>
         </div>
-        <p class="allin-info" id="allin-info">ALL IN: 10% szans na wygranie 10x więcej, 90% na stratę wszystkiego.</p>
+        <p class="allin-info" id="allin-info">ALL IN: 20% szans na wygranie 10x więcej, 75% na stratę wszystkiego, 5% na zwrot stawki.</p>
       </div>
     </div>
   </div>
@@ -278,7 +278,7 @@
 <script>
 (function () {
   var START = 1000, MIN = 10, KROK = 10, STAWKA_START = 50;
-  var SZANSA_ALLIN = 10, MNOZNIK_ALLIN = 10;   // ALL IN: 10% szans na wygraną 10x stawki
+  var SZANSA_ALLIN = 20, SZANSA_ZWROT = 5, MNOZNIK_ALLIN = 10;   // ALL IN: 20% wygrana 10x stawki, 5% zwrot stawki, reszta (75%) to strata wszystkiego
   var SEGMENTY = 18, KAT = 360 / SEGMENTY, CZAS_OBROTU = 2400;
   var K_STAN = 'northbet-stan', K_LOKALNE = 'northbet-lokalne';
 
@@ -304,11 +304,11 @@
   var SERIA_P = ['Trzecia porażka z rzędu. Może czas na zamianę zmiany?', 'Seria porażek. Rozważ wypłatę resztek.'];
   var WYGRANA_ALLIN = [
     'ALL IN trafiony! Zadzwoń do kierownika i powiedz, że dziś Cię nie będzie.',
-    'Jeden na dziesięciu. Dziś jesteś tym jednym.',
+    'Jeden na pięciu. Dziś jesteś tym jednym.',
     'Dziesięć razy więcej! NorthBet właśnie sprawdza, czy to nie błąd.'
   ];
   var PORAZKA_ALLIN = [
-    'ALL IN i pusto. Dziewięć razy na dziesięć tak to się kończy.',
+    'ALL IN i pusto. Trzy razy na cztery tak to się kończy.',
     'Odwaga godna podziwu, rachunek już mniej.',
     'Wszystko albo nic. Padło na nic.'
   ];
@@ -493,24 +493,27 @@
     zajety = true;
     odswiez();
     komunikat(allin ? 'ALL IN! Kręcimy…' : 'Kręcimy…', (allin ? 'Cała kasa, ' + pln(stawka) + ', na ' : 'Stawka ' + pln(stawka) + ' na ') + wybor + '.', '');
-    var wygrana = allin ? los(100) < SZANSA_ALLIN : losujBit() === 1 === (wybor === 'czerwone');
+    var rzut = allin ? los(100) : -1;
+    var zwrot = allin && rzut >= 100 - SZANSA_ZWROT;                    // ostatnie 5%: stawka wraca
+    var wygrana = allin ? rzut < SZANSA_ALLIN : losujBit() === 1 === (wybor === 'czerwone');
     var przeciwny = wybor === 'czerwone' ? 'czarne' : 'czerwone';
     var wypadlo = wygrana ? wybor : przeciwny;   // koło zatrzymuje się na kolorze zgodnym z wynikiem losowania
+    if (zwrot) wypadlo = wybierz(['czarne', 'czerwone']);
     var zysk = allin ? stawka * MNOZNIK_ALLIN : stawka;
     zakrec(wypadlo, function () {
-      stan.saldo += wygrana ? zysk : -stawka;
+      stan.saldo += zwrot ? 0 : wygrana ? zysk : -stawka;
       stan.allin = false;
-      stan.seria = wygrana ? (stan.seria > 0 ? stan.seria + 1 : 1) : (stan.seria < 0 ? stan.seria - 1 : -1);
+      if (!zwrot) stan.seria = wygrana ? (stan.seria > 0 ? stan.seria + 1 : 1) : (stan.seria < 0 ? stan.seria - 1 : -1);
       zajety = false;
       dopasujStawke();
       zapiszStan();
-      blysnij(wygrana ? 'plus' : 'minus');
-      var zart = allin
+      if (!zwrot) blysnij(wygrana ? 'plus' : 'minus');
+      var zart = zwrot ? 'Tym razem NorthBet oddaje stawkę. Nie przyzwyczajaj się.' : allin
         ? (wygrana ? wybierz(WYGRANA_ALLIN) : (stan.saldo < MIN ? BANKRUT : wybierz(PORAZKA_ALLIN)))
         : wygrana
         ? (stan.seria >= 3 ? wybierz(SERIA_W) : wybierz(WYGRANA))
         : (stan.saldo < MIN ? BANKRUT : stan.seria <= -3 ? wybierz(SERIA_P) : wybierz(PORAZKA));
-      komunikat((allin ? 'ALL IN! ' : '') + 'Wypadło ' + wypadlo + '. ' + (wygrana ? 'Wygrywasz ' : 'Tracisz ') + pln(wygrana ? zysk : stawka) + '.', zart, wygrana ? 'wygrana' : 'porazka');
+      komunikat((allin ? 'ALL IN! ' : '') + 'Wypadło ' + wypadlo + '. ' + (zwrot ? 'Zwrot stawki: ' + pln(stawka) + ', bilans zero.' : (wygrana ? 'Wygrywasz ' : 'Tracisz ') + pln(wygrana ? zysk : stawka) + '.'), zart, zwrot ? '' : wygrana ? 'wygrana' : 'porazka');
       odswiez();
     });
   }
@@ -532,7 +535,7 @@
     stan.allin = !stan.allin;
     if (stan.allin) {
       odswiez();
-      komunikat('ALL IN: ' + pln(stan.saldo) + ' na jedną kartę.', 'Szansa 10% na wygraną 10x stawki (' + pln(stan.saldo * MNOZNIK_ALLIN) + '), 90% na stratę wszystkiego. Wybierz kolor.', '');
+      komunikat('ALL IN: ' + pln(stan.saldo) + ' na jedną kartę.', 'Szansa 20% na wygraną 10x stawki (' + pln(stan.saldo * MNOZNIK_ALLIN) + '), 75% na stratę wszystkiego, 5% na zwrot stawki. Wybierz kolor.', '');
     } else {
       stan.stawka = Math.max(MIN, Math.min(STAWKA_START, stan.saldo));
       odswiez();
