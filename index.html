@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Siejopedia v1.4</title>
+<title>Siejopedia v1.6</title>
 <style>
   :root {
     --tlo: #f5f6f4;
@@ -172,7 +172,7 @@
 <body>
 <main>
   <header>
-    <h1>Siejopedia v1.4</h1>
+    <h1>Siejopedia v1.6</h1>
     <span id="miesiac"></span>
     <div class="narzedzia">
       <label class="filtr" id="filtr-wrap" hidden>Pokaż:
@@ -344,7 +344,11 @@
 
     // Kliknięcie w numer dnia przyciemnia całą linię tego dnia; ponowne kliknięcie (lub inny dzień) zmienia/zdejmuje
     // Magazynier i kierownik (grupy "magazyn" i "kierownik") nie są podświetlani
-    var podswietlany = function (w) { var g = String(w.p.grupa || '').trim().toLowerCase(); return g !== 'magazyn' && g !== 'kierownik'; };
+    // Pomijani są po grupie ("magazyn", "kierownik") albo po imieniu, gdy ktoś nie ma wpisanej grupy
+    var podswietlany = function (w) {
+      var g = String(w.p.grupa || '').trim().toLowerCase(), i = String(w.p.imie || '').trim().toLowerCase();
+      return ['magazyn', 'kierownik'].indexOf(g) === -1 && ['magazynier', 'kieras'].indexOf(i) === -1;
+    };
     var przyciemnionyDzien = 0;
     var pracuje = {};   // pracuje[imie][dzien] = true, gdy zmiana ma godziny
     function zastosujPrzyciemnienie() {
