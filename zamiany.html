@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zamiany – Siejopedia v0.1</title>
+<title>Zamiany – Siejopedia v1.4</title>
 <style>
   :root {
     --tlo: #f5f6f4;
@@ -108,7 +108,7 @@
 <body>
 <main>
   <header>
-    <h1>Siejopedia v0.1</h1>
+    <h1>Siejopedia v1.4</h1>
     <span id="podtytul">zamiany</span>
     <a class="przycisk drugi" href="index.html">Wróć do grafiku</a>
   </header>
@@ -216,6 +216,9 @@
       }
       return { p: p, kody: kody, grupa: String(p.grupa || '').trim() };
     });
+    // Magazynier i kierownik nie biorą udziału w zamianach: nie ma ich ani na liście osób, ani wśród kandydatów.
+    var BEZ_ZAMIAN = ['magazyn', 'kierownik'];
+    wiersze = wiersze.filter(function (w) { return BEZ_ZAMIAN.indexOf(w.grupa.toLowerCase()) === -1; });
     // Wymieniać można się tylko w obrębie tej samej grupy (pole "grupa"). Bez pola wszyscy są w jednej grupie.
     var tejSamejGrupy = function (a, b) { return a.grupa.toLowerCase() === b.grupa.toLowerCase(); };
     if (!wiersze.length) { pokazBlad('W pliku grafik.json nie ma żadnych doradców.'); return; }
