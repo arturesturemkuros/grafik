@@ -1,642 +1,74 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Siejopedia v1.6</title>
-<style>
-  :root {
-    --tlo: #f5f6f4;
-    --karta: #ffffff;
-    --tekst: #1d2a2e;
-    --tekst-2: #5d6b70;
-    --linia: #dde2e0;
-    --weekend: #eef1ef;
-    --dzis: #0f6b63;
-    --dzis-tlo: #dff0ed;
-    --na-akcent: #ffffff;
-    --blad: #a4262c;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --na-akcent: #06302c;
-      --tlo: #12191b;
-      --karta: #1a2427;
-      --tekst: #e6eceb;
-      --tekst-2: #9aabae;
-      --linia: #2c3a3e;
-      --weekend: #202c2f;
-      --dzis: #5fc7bb;
-      --dzis-tlo: #1d3a38;
-      --blad: #ff8a8f;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Do widzenia</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      background: #000;
+      overflow: hidden;
     }
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; }
-  body {
-    background: var(--tlo);
-    color: var(--tekst);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.5;
-    padding: 16px;
-  }
-  main { width: 100%; max-width: 1800px; margin: 0 auto; }
-  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 14px; }
-  h1 { font-size: 1.6rem; margin: 0; font-weight: 700; }
-  #miesiac { font-size: 1.1rem; color: var(--tekst-2); }
-  #notatka { color: var(--tekst-2); margin: 0 0 14px; }
-  .narzedzia { margin-left: auto; align-self: center; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
-  .filtr { font-size: .9rem; color: var(--tekst-2); }
-  .filtr select {
-    font: inherit; color: var(--tekst); background: var(--karta);
-    border: 1px solid var(--linia); border-radius: 6px; padding: 6px 8px; margin-left: 6px;
-  }
-  .przycisk {
-    display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px;
-    border-radius: 6px; border: 1px solid var(--dzis); background: var(--dzis); color: var(--na-akcent);
-    font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
-  }
-  .przycisk:hover { filter: brightness(1.1); }
-  .przycisk:focus-visible { outline: 3px solid var(--tekst); outline-offset: 2px; }
 
-  /* overflow: clip zaokrągla rogi, a nie tworzy suwaka, więc nagłówek może się przyklejać do góry */
-  .tabela-wrap {
-    background: var(--karta); border: 1px solid var(--linia); border-radius: 8px;
-    overflow: clip;
-  }
-  table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; }
-  th, td { border-bottom: 1px solid var(--linia); border-right: 1px solid var(--linia); text-align: center; padding: 0; }
-  tr > :last-child { border-right: 0; }
-  tbody tr:last-child > * { border-bottom: 0; }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 16px;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
 
-  td.komorka { cursor: pointer; font-weight: 700; }
-  td.komorka span {
-    display: flex; align-items: center; justify-content: center; height: 100%;
-    white-space: nowrap; letter-spacing: -.02em;
-  }
-  td.komorka:focus-visible { outline: 3px solid var(--dzis); outline-offset: -3px; }
-  td.wybrana { outline: 3px solid var(--tekst); outline-offset: -3px; }
-  td.nieznany span { background: var(--blad); color: #fff; }
-  td.weekend { background: var(--weekend); }
-  /* Kliknięty dzień: cała jego linia (kolumna na komputerze, wiersz na telefonie) jest przyciemniona */
-  .przyciemnione { filter: brightness(.7); }
-  /* Imiona doradców, którzy w klikniętym dniu pracują: #c977bc przy 70% widoczności */
-  th.pracuje { background: rgba(201, 119, 188, .7) !important; color: #1b0a18; }
-  th.wybieralny { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-  th.wybieralny:focus-visible { outline: 3px solid var(--dzis); outline-offset: -3px; }
+    h1 {
+      color: #fff;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      text-align: center;
+      line-height: 1.2;
+      /* PC: duży napis, smartfon: skaluje się do szerokości ekranu */
+      font-size: clamp(2.5rem, 9vw, 7rem);
+      text-shadow:
+        0 0 6px rgba(255, 255, 255, 0.6),
+        0 0 18px rgba(255, 255, 255, 0.35),
+        0 0 40px rgba(255, 255, 255, 0.2);
+      animation: glow 4s ease-in-out infinite;
+    }
 
-  /* ===== Układ na komputer: doradcy w wierszach, dni w kolumnach ===== */
-  .widok-waski { display: none; }
-  .widok-szeroki thead th { padding: 6px 0; font-weight: 600; font-size: .82rem; }
-  .widok-szeroki thead th small { display: block; font-weight: 400; color: var(--tekst-2); font-size: .7rem; }
-  .widok-szeroki thead th.weekend { background: var(--weekend); }
-  .widok-szeroki thead th.dzis { background: var(--dzis-tlo); color: var(--dzis); box-shadow: inset 0 3px 0 var(--dzis); }
-  .widok-szeroki thead th.dzis small { color: var(--dzis); }
-  .widok-szeroki td.dzis { box-shadow: inset 2px 0 0 var(--dzis), inset -2px 0 0 var(--dzis); }
-  .widok-szeroki th.imie {
-    width: 126px; text-align: left; padding: 0 10px; font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    border-right: 2px solid var(--linia);
-  }
-  .widok-szeroki thead th.imie { padding: 6px 10px; }
-  .widok-szeroki th.suma { width: 64px; border-left: 2px solid var(--linia); }
-  .widok-szeroki td.suma { font-weight: 700; font-size: .85rem; border-left: 2px solid var(--linia); }
-  .widok-szeroki td.komorka { height: 40px; font-size: .7rem; }
+    @keyframes glow {
+      0%, 100% {
+        text-shadow:
+          0 0 6px rgba(255, 255, 255, 0.55),
+          0 0 18px rgba(255, 255, 255, 0.3),
+          0 0 40px rgba(255, 255, 255, 0.15);
+      }
+      50% {
+        text-shadow:
+          0 0 8px rgba(255, 255, 255, 0.75),
+          0 0 26px rgba(255, 255, 255, 0.45),
+          0 0 60px rgba(255, 255, 255, 0.25);
+      }
+    }
 
-  /* ===== Układ na telefon: dni w wierszach, doradcy w kolumnach ===== */
-  @media (max-width: 1199px) {
-    .widok-szeroki { display: none; }
-    .widok-waski { display: table; }
-  }
-  .widok-waski thead th {
-    position: sticky; top: 0; z-index: 3; background: var(--karta);
-    border-bottom: 2px solid var(--linia); font-weight: 600;
-  }
-  .widok-waski th.dor { height: 92px; vertical-align: bottom; padding: 6px 0; }
-  .pion {
-    display: inline-block; writing-mode: vertical-rl; transform: rotate(180deg);
-    white-space: nowrap; font-size: .78rem; max-height: 80px; overflow: hidden; text-overflow: ellipsis;
-  }
-  .widok-waski th.dzien {
-    width: 46px; font-size: .72rem; font-weight: 600; white-space: nowrap;
-    background: var(--karta); border-right: 2px solid var(--linia);
-  }
-  .widok-waski th.dzien small { color: var(--tekst-2); font-weight: 400; margin-left: 2px; font-size: .66rem; }
-  .widok-waski th.dzien.weekend { background: var(--weekend); }
-  .widok-waski th.dzien.dzis { background: var(--dzis-tlo); color: var(--dzis); }
-  .widok-waski th.dzien.dzis small { color: var(--dzis); }
-  .widok-waski td.komorka { height: 30px; font-size: .66rem; }
-  .widok-waski td.dzis { box-shadow: inset 0 2px 0 var(--dzis), inset 0 -2px 0 var(--dzis); }
-  .widok-waski tr.razem th, .widok-waski tr.razem td {
-    border-top: 2px solid var(--linia); height: 36px; font-weight: 700; font-size: .7rem; background: var(--karta);
-  }
+    /* Smartfon */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: clamp(2.2rem, 14vw, 4rem);
+        letter-spacing: 0.05em;
+      }
+    }
 
-  .info {
-    position: absolute; z-index: 10; max-width: 240px;
-    background: var(--tekst); color: var(--karta);
-    border-radius: 8px; padding: 8px 12px; font-size: .9rem; line-height: 1.4;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, .25); display: none;
-  }
-  .info.widoczny { display: block; }
-  .info strong { display: block; }
-  .legenda { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 0; padding: 0; list-style: none; font-size: .9rem; }
-  .legenda li { display: flex; align-items: center; gap: 8px; }
-  .legenda .znak {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 28px; height: 28px; padding: 0 7px; border-radius: 6px; font-weight: 700; font-size: .8rem; white-space: nowrap;
-  }
-  #komunikat { margin: 14px 0; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--blad); color: var(--blad); display: none; }
-  #komunikat.widoczny { display: block; }
-  #ostrzezenia { margin: 14px 0 0; padding: 10px 14px 10px 32px; border-radius: 8px; border: 1px solid var(--linia); color: var(--tekst-2); font-size: .9rem; display: none; }
-  #ostrzezenia.widoczny { display: block; }
-  /* ===== Fajerwerki z liter: tylko na komputerze (od 1200 px szerokości) ===== */
-  .niebo { display: none; margin-top: 24px; padding: 10px 14px; overflow: hidden; }
-  .niebo[hidden] { display: none !important; }
-  @media (min-width: 1200px) { .niebo { display: block; } }
-  .fajerwerki {
-    --fajerwerki: #000;
-    margin: 0 auto; width: fit-content; height: 23em; overflow: hidden;
-    font: 13px/1.15 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    color: var(--fajerwerki); white-space: pre; user-select: none;
-  }
-  .fajerwerki i { font-style: normal; }
-  /* w ciemnym motywie czarne litery byłyby niewidoczne, więc tam są jasne */
-  @media (prefers-color-scheme: dark) { .fajerwerki { --fajerwerki: #e6eceb; } }
-  @media (max-width: 600px) {
-    body { padding: 8px; }
-    h1 { font-size: 1.25rem; }
-    .narzedzia { margin-left: 0; width: 100%; }
-  }
-</style>
+    @media (prefers-reduced-motion: reduce) {
+      h1 { animation: none; }
+    }
+  </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>Siejopedia v1.6</h1>
-    <span id="miesiac"></span>
-    <div class="narzedzia">
-      <label class="filtr" id="filtr-wrap" hidden>Pokaż:
-        <select id="filtr"></select>
-      </label>
-      <a class="przycisk" href="zamiany.html">Zamiany</a>
-      <a class="przycisk" href="northbet.html">NorthBet</a>
-    </div>
-  </header>
-  <p id="notatka"></p>
-  <div id="komunikat" role="alert"></div>
-  <div class="tabela-wrap">
-    <table id="tabela" class="widok-szeroki" aria-label="Grafik pracy"></table>
-    <table id="tabela-wsk" class="widok-waski" aria-label="Grafik pracy (widok na telefon)"></table>
-  </div>
-  <ul class="legenda" id="legenda"></ul>
-  <ul id="ostrzezenia"></ul>
-  <div class="niebo" id="niebo"><pre class="fajerwerki" id="fajerwerki" aria-hidden="true"></pre></div>
-  <div class="info" id="info" role="status"></div>
-</main>
-
-<script>
-(function () {
-  var MIESIACE = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
-  var MIESIACE_DOP = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
-  var DNI = ['nd','pn','wt','śr','cz','pt','sb'];
-
-  var el = function (id) { return document.getElementById(id); };
-  var make = function (tag, cls, text) {
-    var n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (text !== undefined) n.textContent = text;
-    return n;
-  };
-  var pokazBlad = function (tekst) {
-    var k = el('komunikat');
-    k.textContent = tekst;
-    k.className = 'widoczny';
-  };
-  var formatGodzin = function (h) {
-    return h.toLocaleString('pl-PL', { maximumFractionDigits: 2 });
-  };
-
-  var RE_GODZINY = /^\s*(\d{1,2})(?::(\d{2}))?\s*[–—-]\s*(\d{1,2})(?::(\d{2}))?\s*$/;
-
-  // Liczba godzin danej zmiany: z pola "godzin" (jeśli jest) albo wyliczona z tekstu "godziny", np. "10 - 18" lub "22:00–6:00".
-  function godzinyZmiany(z) {
-    if (!z) return 0;
-    if (typeof z.godzin === 'number') return z.godzin;
-    var m = RE_GODZINY.exec(z.godziny || '');
-    if (!m) return 0;
-    var a = (+m[1]) * 60 + (+m[2] || 0);
-    var b = (+m[3]) * 60 + (+m[4] || 0);
-    if (b <= a) b += 24 * 60;
-    return (b - a) / 60;
-  }
-
-  // Napis w kafelku: godziny w skróconej postaci ("10:00–22:00" -> "10-22").
-  // Można go nadpisać polem "etykieta" w grafik.json. Bez godzin (np. Wolne) pokazuje się kod zmiany.
-  function etykieta(kod, def) {
-    if (!def) return kod || '?';
-    if (def.etykieta) return def.etykieta;
-    var m = RE_GODZINY.exec(def.godziny || '');
-    if (!m) return kod;
-    var cz = function (h, mm) { return String(+h) + (mm && +mm ? ':' + mm : ''); };
-    return cz(m[1], m[2]) + '-' + cz(m[3], m[4]);
-  }
-
-  // Plik grafik.json jest pobierany za każdym razem od nowa (parametr ?t=), żeby po podmianie nie wyświetlał się stary grafik z pamięci przeglądarki.
-  fetch('grafik.json?t=' + Date.now(), { cache: 'no-store' })
-    .then(function (r) {
-      if (!r.ok) throw new Error('Nie znaleziono pliku grafik.json (kod ' + r.status + ').');
-      return r.json();
-    })
-    .then(rysuj)
-    .catch(function (e) {
-      var blad = e instanceof SyntaxError
-        ? 'W pliku grafik.json jest błąd składni (np. brakujący przecinek lub cudzysłów).'
-        : (e.message || 'Nie udało się wczytać grafiku.');
-      if (location.protocol === 'file:') {
-        blad += ' Strona otwarta z dysku nie może wczytać grafiku, uruchom ją przez serwer (np. python -m http.server) albo wgraj na hosting.';
-      }
-      pokazBlad(blad);
-    });
-
-  function rysuj(dane) {
-    var ostrzezenia = [];
-    var m = /^(\d{4})-(\d{2})$/.exec(dane.miesiac || '');
-    if (!m) { pokazBlad('Pole "miesiac" w grafik.json musi mieć postać RRRR-MM, np. 2026-11.'); return; }
-    var rok = +m[1], mies = +m[2] - 1;
-    if (mies < 0 || mies > 11) { pokazBlad('Nieprawidłowy numer miesiąca w polu "miesiac".'); return; }
-    var liczbaDni = new Date(rok, mies + 1, 0).getDate();
-
-    el('miesiac').textContent = MIESIACE[mies] + ' ' + rok;
-    el('notatka').textContent = dane.notatka || '';
-    if (!dane.notatka) el('notatka').style.display = 'none';
-
-    var zmiany = dane.zmiany || {};
-    var doradcy = dane.doradcy || dane.pracownicy || [];
-    // "dni" to obiekt {"1": "R", "2": "W", ...} (zalecany zapis) albo dawny tekst "R W P ..." (nadal działa)
-    var wiersze = doradcy.map(function (p) {
-      var kody = [], braki = [], nadmiar = [];
-      var obiekt = !!p.dni && typeof p.dni === 'object' && !Array.isArray(p.dni);
-      if (obiekt) {
-        Object.keys(p.dni).forEach(function (klucz) {
-          var n = parseInt(klucz, 10);
-          var wart = String(p.dni[klucz] == null ? '' : p.dni[klucz]).trim();
-          if (!(n >= 1) || String(n) !== klucz.trim() || n > liczbaDni) { nadmiar.push(klucz); return; }
-          kody[n - 1] = wart;
-        });
-        for (var d = 1; d <= liczbaDni; d++) { if (!kody[d - 1]) braki.push(d); }
-      } else {
-        kody = String(p.dni || '').trim().split(/\s+/).filter(Boolean);
-      }
-      return { p: p, kody: kody, braki: braki, nadmiar: nadmiar, obiekt: obiekt };
-    });
-
-    var dzis = new Date();
-    var dzisDzien = (dzis.getFullYear() === rok && dzis.getMonth() === mies) ? dzis.getDate() : -1;
-    var dow = function (d) { return new Date(rok, mies, d).getDay(); };
-    var weekend = function (d) { var w = dow(d); return w === 0 || w === 6; };
-
-    // Okienko z godzinami po kliknięciu w zmianę
-    var info = el('info');
-    var wybrana = null;
-    function ukryjInfo() {
-      info.className = 'info';
-      if (wybrana) { wybrana.classList.remove('wybrana'); wybrana = null; }
-    }
-    function pokazInfo(td) {
-      if (wybrana === td) { ukryjInfo(); return; }
-      ukryjInfo();
-      var kod = td.getAttribute('data-kod');
-      var def = zmiany[kod];
-      info.textContent = '';
-      info.appendChild(make('strong', '', td.getAttribute('data-imie') + ', ' + td.getAttribute('data-dzien') + ' ' + MIESIACE_DOP[mies]));
-      if (def) {
-        var godz = godzinyZmiany(def);
-        var linia = def.nazwa;
-        if (def.godziny) linia += ': ' + def.godziny;
-        if (godz > 0) linia += ' (' + formatGodzin(godz) + ' godz.)';
-        info.appendChild(make('span', '', linia));
-      } else {
-        info.appendChild(make('span', '', 'Nieznane oznaczenie zmiany: ' + kod));
-      }
-      info.className = 'info widoczny';
-      td.classList.add('wybrana');
-      wybrana = td;
-      var r = td.getBoundingClientRect();
-      var szer = info.offsetWidth;
-      var lewo = r.left + window.pageXOffset + r.width / 2 - szer / 2;
-      var maxLewo = document.documentElement.clientWidth - szer - 8;
-      lewo = Math.max(8, Math.min(lewo, maxLewo));
-      info.style.left = lewo + 'px';
-      info.style.top = (r.bottom + window.pageYOffset + 6) + 'px';
-    }
-    document.addEventListener('click', function (e) {
-      var td = e.target.closest ? e.target.closest('td.komorka') : null;
-      if (td) pokazInfo(td); else ukryjInfo();
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') ukryjInfo();
-      if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('komorka')) {
-        e.preventDefault();
-        pokazInfo(e.target);
-      }
-    });
-    window.addEventListener('resize', ukryjInfo);
-
-    // Kliknięcie w numer dnia przyciemnia całą linię tego dnia; ponowne kliknięcie (lub inny dzień) zmienia/zdejmuje
-    // Magazynier i kierownik (grupy "magazyn" i "kierownik") nie są podświetlani
-    // Pomijani są po grupie ("magazyn", "kierownik") albo po imieniu, gdy ktoś nie ma wpisanej grupy
-    var podswietlany = function (w) {
-      var g = String(w.p.grupa || '').trim().toLowerCase(), i = String(w.p.imie || '').trim().toLowerCase();
-      return ['magazyn', 'kierownik'].indexOf(g) === -1 && ['magazynier', 'kieras'].indexOf(i) === -1;
-    };
-    var przyciemnionyDzien = 0;
-    var pracuje = {};   // pracuje[imie][dzien] = true, gdy zmiana ma godziny
-    function zastosujPrzyciemnienie() {
-      var nodes = document.querySelectorAll('[data-dzien]');
-      Array.prototype.forEach.call(nodes, function (n) {
-        var on = przyciemnionyDzien !== 0 && n.getAttribute('data-dzien') === String(przyciemnionyDzien);
-        n.classList.toggle('przyciemnione', on);
-        if (n.tagName === 'TH') n.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
-      var imiona = document.querySelectorAll('th[data-pracownik]');
-      Array.prototype.forEach.call(imiona, function (h) {
-        var p = pracuje[h.getAttribute('data-pracownik')];
-        h.classList.toggle('pracuje', !!(przyciemnionyDzien && p && p[przyciemnionyDzien]));
-      });
-    }
-    function dzienKlikalny(th, d) {
-      th.setAttribute('data-dzien', String(d));
-      th.classList.add('wybieralny');
-      th.setAttribute('tabindex', '0');
-      th.setAttribute('role', 'button');
-      th.setAttribute('aria-pressed', 'false');
-      th.title = 'Kliknij, aby przyciemnić ' + d + ' ' + MIESIACE_DOP[mies];
-      var przelacz = function () {
-        przyciemnionyDzien = przyciemnionyDzien === d ? 0 : d;
-        zastosujPrzyciemnienie();
-      };
-      th.addEventListener('click', przelacz);
-      th.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); przelacz(); }
-      });
-    }
-
-    // Jeden kafelek (komórka) grafiku, wspólny dla obu układów
-    function komorka(imie, d, kod) {
-      var def = kod ? zmiany[kod] : null;
-      var cls = 'komorka' + (weekend(d) ? ' weekend' : '') + (d === dzisDzien ? ' dzis' : '') + (def ? '' : ' nieznany');
-      var td = make('td', cls);
-      td.setAttribute('data-imie', imie);
-      td.setAttribute('data-dzien', String(d));
-      td.setAttribute('data-kod', kod || '?');
-      td.setAttribute('tabindex', '0');
-      td.setAttribute('role', 'button');
-      var s = make('span', '', etykieta(kod, def));
-      if (def) {
-        s.style.background = def.kolor || 'transparent';
-        s.style.color = def.tekst || '#1d2a2e';
-      }
-      td.appendChild(s);
-      var godz = def ? godzinyZmiany(def) : 0;
-      (pracuje[imie] = pracuje[imie] || {})[d] = godz > 0;
-      return { td: td, godz: godz };
-    }
-
-    // Układ na komputer: doradcy w wierszach, dni w kolumnach, suma godzin po prawej
-    function budujSzeroka(lista) {
-      var t = el('tabela');
-      t.textContent = '';
-      var thead = make('thead');
-      var wiersz = make('tr');
-      wiersz.appendChild(make('th', 'imie', 'Doradca'));
-      for (var d = 1; d <= liczbaDni; d++) {
-        var th = make('th', (weekend(d) ? 'weekend ' : '') + (d === dzisDzien ? 'dzis' : ''), String(d));
-        th.appendChild(make('small', '', DNI[dow(d)]));
-        dzienKlikalny(th, d);
-        wiersz.appendChild(th);
-      }
-      var thSuma = make('th', 'suma', 'Godz.');
-      thSuma.appendChild(make('small', '', 'razem'));
-      wiersz.appendChild(thSuma);
-      thead.appendChild(wiersz);
-      t.appendChild(thead);
-
-      var tbody = make('tbody');
-      lista.forEach(function (w) {
-        var tr = make('tr');
-        var thI = make('th', 'imie', w.p.imie);
-        if (podswietlany(w)) thI.setAttribute('data-pracownik', w.p.imie);
-        tr.appendChild(thI);
-        var suma = 0;
-        for (var d = 1; d <= liczbaDni; d++) {
-          var k = komorka(w.p.imie, d, w.kody[d - 1]);
-          suma += k.godz;
-          tr.appendChild(k.td);
-        }
-        tr.appendChild(make('td', 'suma', formatGodzin(suma)));
-        tbody.appendChild(tr);
-      });
-      t.appendChild(tbody);
-    }
-
-    // Układ na telefon: dni w wierszach, doradcy w kolumnach (więcej kafelków mieści się bez przewijania w bok)
-    function budujWaska(lista) {
-      var t = el('tabela-wsk');
-      t.textContent = '';
-      var thead = make('thead');
-      var wiersz = make('tr');
-      wiersz.appendChild(make('th', 'dzien', 'Dzień'));
-      lista.forEach(function (w) {
-        var th = make('th', 'dor');
-        th.title = w.p.imie;
-        if (podswietlany(w)) th.setAttribute('data-pracownik', w.p.imie);
-        th.appendChild(make('span', 'pion', w.p.imie));
-        wiersz.appendChild(th);
-      });
-      thead.appendChild(wiersz);
-      t.appendChild(thead);
-
-      var sumy = lista.map(function () { return 0; });
-      var tbody = make('tbody');
-      for (var d = 1; d <= liczbaDni; d++) {
-        var tr = make('tr');
-        var thD = make('th', 'dzien' + (weekend(d) ? ' weekend' : '') + (d === dzisDzien ? ' dzis' : ''), String(d));
-        thD.appendChild(make('small', '', DNI[dow(d)]));
-        dzienKlikalny(thD, d);
-        tr.appendChild(thD);
-        lista.forEach(function (w, j) {
-          var k = komorka(w.p.imie, d, w.kody[d - 1]);
-          sumy[j] += k.godz;
-          tr.appendChild(k.td);
-        });
-        tbody.appendChild(tr);
-      }
-      var razem = make('tr', 'razem');
-      razem.appendChild(make('th', 'dzien', 'Godz.'));
-      sumy.forEach(function (s) { razem.appendChild(make('td', 'suma', formatGodzin(s))); });
-      tbody.appendChild(razem);
-      t.appendChild(tbody);
-    }
-
-    function zbuduj(tylko) {
-      ukryjInfo();
-      var lista = wiersze.filter(function (w, i) { return tylko === '' || String(i) === tylko; });
-      budujSzeroka(lista);
-      budujWaska(lista);
-      zastosujPrzyciemnienie();
-    }
-
-    // Filtr doradców
-    var filtr = el('filtr');
-    filtr.appendChild(new Option('wszystkich', ''));
-    doradcy.forEach(function (p, i) { filtr.appendChild(new Option(p.imie, String(i))); });
-    el('filtr-wrap').hidden = doradcy.length < 2;
-    filtr.addEventListener('change', function () { zbuduj(filtr.value); });
-    zbuduj('');
-
-    // Legenda
-    var leg = el('legenda');
-    Object.keys(zmiany).forEach(function (k) {
-      var z = zmiany[k];
-      var li = make('li');
-      var znak = make('span', 'znak', etykieta(k, z));
-      znak.style.background = z.kolor || 'transparent';
-      znak.style.color = z.tekst || '#1d2a2e';
-      li.appendChild(znak);
-      li.appendChild(make('span', '', z.nazwa));
-      leg.appendChild(li);
-    });
-
-    // Kontrola poprawności danych, żeby błąd w pliku był od razu widoczny
-    wiersze.forEach(function (w) {
-      if (w.obiekt) {
-        if (w.braki.length) ostrzezenia.push(w.p.imie + ': brak zmiany w dniach: ' + w.braki.join(', ') + '.');
-        if (w.nadmiar.length) ostrzezenia.push(w.p.imie + ': dni, których nie ma w tym miesiącu (ma ' + liczbaDni + ' dni): ' + w.nadmiar.join(', ') + '.');
-      } else if (w.kody.length !== liczbaDni) {
-        ostrzezenia.push(w.p.imie + ': podano ' + w.kody.length + ' dni, a w tym miesiącu jest ' + liczbaDni + '.');
-      }
-      var nieznane = w.kody.filter(function (k) { return k && !zmiany[k]; });
-      if (nieznane.length) {
-        ostrzezenia.push(w.p.imie + ': nieznane oznaczenie zmiany (' + nieznane.filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') + ').');
-      }
-    });
-    if (ostrzezenia.length) {
-      var ul = el('ostrzezenia');
-      ostrzezenia.forEach(function (o) { ul.appendChild(make('li', '', o)); });
-      ul.className = 'widoczny';
-    }
-  }
-})();
-</script>
-
-<script>
-// Fajerwerki z liter pod tablicą. Animacja jest rysowana na bieżąco i działa tylko na komputerze (od 1200 px),
-// gdy karta jest widoczna. Wyłącza się przy ustawieniu "ogranicz animacje" w systemie.
-(function () {
-  var niebo = document.getElementById('niebo');
-  var pre = document.getElementById('fajerwerki');
-  if (!niebo || !pre || !window.matchMedia) return;
-  var szeroki = window.matchMedia('(min-width: 1200px)');
-  var spokojny = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (spokojny.matches) { niebo.hidden = true; return; }
-
-  var W = 120, H = 20, KOLORY = 6;
-  var rakiety = [], iskry = [], czekaj = 1, timer = null, widoczne = true, gotowe = false;
-
-  // Szerokość sceny dopasowana do szerokości okna (w znakach)
-  function zmierz() {
-    var probka = document.createElement('span');
-    probka.textContent = new Array(101).join('M');
-    pre.textContent = '';
-    pre.appendChild(probka);
-    var szer = probka.getBoundingClientRect().width / 100;
-    W = Math.max(60, Math.min(170, Math.floor((niebo.clientWidth - 28) / (szer || 8))));
-  }
-
-  function rakieta() {
-    rakiety.push({
-      x: 8 + Math.random() * (W - 16), y: H - 1, vx: (Math.random() - .5) * .3,
-      cel: 7 + Math.random() * 6, k: Math.floor(Math.random() * KOLORY)
-    });
-  }
-
-  function wybuch(r) {
-    var pierscien = Math.random() < .5;
-    var n = pierscien ? 36 : 30 + Math.floor(Math.random() * 20);
-    var sila = .5 + Math.random() * .3;
-    for (var i = 0; i < n; i++) {
-      var kat = (i / n) * Math.PI * 2 + Math.random() * .2;
-      var v = pierscien ? sila : sila * (.4 + Math.random() * .7);
-      // znak jest około dwa razy wyższy niż szerszy, więc poziomą prędkość mnożymy przez 2
-      iskry.push({
-        x: r.x, y: r.y, vx: Math.cos(kat) * v * 2, vy: Math.sin(kat) * v,
-        zycie: 0, max: 20 + Math.floor(Math.random() * 14), k: r.k
-      });
-    }
-  }
-
-  function krok() {
-    if (--czekaj <= 0 && rakiety.length < 4) { rakieta(); czekaj = 14 + Math.floor(Math.random() * 30); }
-    rakiety = rakiety.filter(function (r) {
-      r.y -= .75; r.x += r.vx;
-      if (r.y <= r.cel) { wybuch(r); return false; }
-      return true;
-    });
-    iskry = iskry.filter(function (s) {
-      s.x += s.vx; s.y += s.vy;
-      s.vy += .02; s.vx *= .92; s.vy *= .92;
-      return ++s.zycie < s.max;
-    });
-  }
-
-  function rysuj() {
-    var znaki = [], kol = [], y, x;
-    for (y = 0; y < H; y++) { znaki.push(new Array(W).fill(' ')); kol.push(new Array(W).fill(-1)); }
-    function poloz(px, py, c, k) {
-      px = Math.round(px); py = Math.round(py);
-      if (px >= 0 && px < W && py >= 0 && py < H) { znaki[py][px] = c; kol[py][px] = k; }
-    }
-    rakiety.forEach(function (r) {
-      poloz(r.x, r.y, '|', 6); poloz(r.x, r.y + 1, ':', 6); poloz(r.x, r.y + 2, '.', 6);
-    });
-    iskry.forEach(function (s) {
-      var f = s.zycie / s.max;
-      poloz(s.x, s.y, f < .35 ? '*' : f < .65 ? '+' : f < .85 ? '.' : "'", s.k);
-    });
-    var html = '';
-    for (y = 0; y < H; y++) {
-      for (x = 0; x < W; x++) {
-        html += znaki[y][x] === ' ' ? ' ' : '<i class="c' + kol[y][x] + '">' + znaki[y][x] + '</i>';
-      }
-      html += '\n';
-    }
-    pre.innerHTML = html;
-  }
-
-  function start() {
-    if (timer) return;
-    if (!gotowe) { zmierz(); gotowe = true; }
-    timer = setInterval(function () { krok(); rysuj(); }, 55);
-  }
-  function stop() { clearInterval(timer); timer = null; }
-  function aktualizuj() {
-    if (szeroki.matches && !spokojny.matches && widoczne && !document.hidden) start(); else stop();
-  }
-
-  szeroki.addEventListener('change', aktualizuj);
-  document.addEventListener('visibilitychange', aktualizuj);
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver(function (e) { widoczne = e[0].isIntersecting; aktualizuj(); }).observe(niebo);
-  }
-  var zmiana = null;
-  window.addEventListener('resize', function () {
-    clearTimeout(zmiana);
-    zmiana = setTimeout(function () {
-      if (szeroki.matches) { zmierz(); rakiety = []; iskry = []; czekaj = 1; }
-    }, 250);
-  });
-  aktualizuj();
-})();
-</script>
+  <h1>do widzenia</h1>
 </body>
 </html>
